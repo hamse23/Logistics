@@ -105,7 +105,8 @@ def _solve_master(G, a_lin, p, t, rho):
 # the bundle method
 # --------------------------------------------------------------------------- #
 def bundle_solve(K, y, C, tol=1e-8, max_iter=500, t0=1.0, t_min=1e-3, t_max=1e4,
-                 kappa=0.1, max_bundle=None, beta0=None, cuts0=None, verbose=False):
+                 kappa=0.1, max_bundle=None, beta0=None, cuts0=None,
+                 max_inactive=15, inactive_tol=1e-10, verbose=False):
     """Maximise phi over beta.  Returns alpha*, b, the certified gap and a history.
 
     cuts0 : optional list of alpha vectors in D used to seed the bundle
@@ -140,6 +141,7 @@ def bundle_solve(K, y, C, tol=1e-8, max_iter=500, t0=1.0, t_min=1e-3, t_max=1e4,
     G = B.T @ KB                                          # J x J
     a_lin = A.sum(1)
 
+    inactive = np.zeros(A.shape[0], dtype=int)   # consecutive nulls per cut
     history, gap, ub, alpha_hat = [], np.inf, np.inf, alpha_bar
     for it in range(1, max_iter + 1):
         rho = 1.0 + 1.0 / t
@@ -182,13 +184,27 @@ def bundle_solve(K, y, C, tol=1e-8, max_iter=500, t0=1.0, t_min=1e-3, t_max=1e4,
         G = np.block([[G, col[:-1, None]], [col[None, :-1], col[-1:][None, :]]])
         a_lin = np.append(a_lin, alpha_new.sum())
 
-        if A.shape[0] > max_bundle:
+        # ---- bundle management ------------------------------------------- #
+        # A cut whose master multiplier is zero did not shape the last master
+        # problem.  Count how many consecutive masters each cut sat out, and
+        # drop the ones that have been idle too long; a cut that becomes active
+        # again has its counter reset.  This keeps the informative cuts and
+        # discards the rest, instead of blindly keeping the most recent ones.
+        inactive = np.append(np.where(th <= inactive_tol, inactive + 1, 0), 0)
+        keep = inactive <= max_inactive
+        keep[-1] = True                                # never drop the newest cut
+        if not keep.all():
+            A, B, KB = A[keep], B[:, keep], KB[:, keep]
+            G = G[np.ix_(keep, keep)]                  # a slice, not a recompute
+            a_lin, inactive = a_lin[keep], inactive[keep]
+
+        if A.shape[0] > max_bundle:                    # hard cap: aggregate
             keep = list(range(A.shape[0] - (max_bundle - 1), A.shape[0]))
-            A = np.vstack([alpha_hat, A[keep]])            # keep the aggregate cut
+            A = np.vstack([alpha_hat, A[keep]])        # keep the aggregate cut
             B = np.column_stack([Bth, B[:, keep]])
             KB = np.column_stack([KBth, KB[:, keep]])
-            G = B.T @ KB
-            a_lin = A.sum(1)
+            G, a_lin = B.T @ KB, A.sum(1)
+            inactive = np.zeros(A.shape[0], dtype=int)
 
     return dict(alpha=alpha_hat, alpha_oracle=best_alpha, beta=beta_new,
                 b=-best_theta, lb=best_lb, ub=ub, gap=gap, iters=len(history),

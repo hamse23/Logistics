@@ -68,6 +68,14 @@ Everything below is produced by `prototype/run_checks.py`.
   (γ=0.2) → 91 free SVs out of 178 → a bundle capped at 60 cuts **stalls** at gap
   2e-4, raising the cap to 200 converges in 153. Classic DW tailing-off, and a clean
   scaling law to report.
+- **Cut pruning is a no-op at these sizes.** Dropping cuts whose master multiplier
+  has been zero for 15 consecutive masters (the standard rule, as in Tortorella &
+  Ferrante's `bundleizator_pruning`) changes nothing measurable: wine+RBF 158 vs 160
+  iterations, max bundle 158 vs 156; wine+linear 33 vs 31; iris+RBF 24 vs 31. The
+  reason is the free-support-vector result above — nearly every cut is still needed
+  to express `alpha_hat`, so almost none go idle. The mechanism is kept because it
+  is cheap and does bind once `m` is large enough for the hard cap to matter, but it
+  should not be reported as a speedup.
 - **Warm-starting across One-vs-Rest classes does not help.** Transferring the
   multiplier is neutral-to-harmful (+72% oracle calls on wine+RBF); transferring cuts
   with a support-preserving repair is within noise (−4% … +2%). What *does* transfer
@@ -95,6 +103,31 @@ prototype/
 pip install -r prototype/requirements.txt
 cd prototype && python3 run_checks.py
 ```
+
+## Ideas taken from related work
+
+- Tortorella & Ferrante, [bundle-svm](https://github.com/dtortorella/bundle-svm) (Pisa,
+  2017): a BMRM-style bundle method applied **directly to the regularised risk** — it
+  dualises nothing, so it does not meet this project's (A1), but its machinery is
+  comparable. Taken: the inactivity-counter pruning rule (measured above), and the
+  low-rank Gram idea below. Their master's dual is a simplex QP of the same shape as
+  ours, which is independent confirmation of Section 4.1.
+- **Low-rank Gram reduction is the one idea with a measured payoff.** Selecting a
+  rank-`r` basis of the Gram matrix by rank-revealing QR turns the `O(m^2)` oracle
+  product into `O(mr)`. Measured spectral decay on the Project 25 datasets:
+
+  | dataset | m | kernel | numerical rank | eigenvalues for 99% of the mass |
+  |---|---|---|---|---|
+  | shuttle | 3000 | linear | 9 | 6 (0.2% of m) |
+  | shuttle | 3000 | rbf | 1931 | 57 (1.9% of m) |
+  | segment | 2310 | rbf | 2072 | 428 (18.5% of m) |
+  | iris | 150 | rbf | 147 | 19 (12.7% of m) |
+
+  Worth doing for nonlinear kernels only: for the linear kernel our `lambda` already
+  lives in `R^n`, so there is no Gram matrix to reduce. Note also that truncating
+  below the numerical rank makes the *upper* bound one for a restricted problem,
+  while `phi(lambda)` stays a valid lower bound on the true `v(D)` for any `lambda`
+  in the subspace — so the method degrades gracefully rather than becoming wrong.
 
 ## Still to do
 
