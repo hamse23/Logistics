@@ -86,8 +86,36 @@ w=\sum_{i=1}^m \alpha_i y_i \phi_i,
 \alpha_i+\mu_i=C .
 \end{equation}
 The first is the \emph{representer identity}; it is the hinge on which this whole
-project turns. Substituting it back and writing $K_{ij}=\kappa(x_i,x_j)$,
-$Y=\operatorname{diag}(y)$, $Q=YKY$, the dual of~\eqref{eq:primal} is the convex QP
+project turns --- Section~\ref{sec:choice} dualises precisely this condition.
+
+Substituting the three conditions back into $L$ makes every term collapse. Writing
+$K_{ij}=\kappa(x_i,x_j)$, $Y=\operatorname{diag}(y)$ and $Q=YKY$:
+\begin{align*}
+\tfrac12\|w\|^2 &= \tfrac12\sum_{i,j}\alpha_i\alpha_jy_iy_jK_{ij}
+ = \tfrac12\alpha^{\!\top}Q\alpha, \\[1mm]
+-\sum_i\alpha_iy_i\inner{w}{\phi_i}
+ &= -\Bigl\langle w,\ \sum_i\alpha_iy_i\phi_i\Bigr\rangle = -\|w\|^2
+ = -\,\alpha^{\!\top}Q\alpha, \\[1mm]
+-\,b\sum_i\alpha_iy_i &= 0
+ &&\text{(by the $b$ condition)},\\[1mm]
+\sum_i\xi_i\bigl(C-\alpha_i-\mu_i\bigr) &= 0
+ &&\text{(by the $\xi$ condition)},
+\end{align*}
+leaving $\one^{\!\top}\alpha-\tfrac12\alpha^{\!\top}Q\alpha$, to be maximised. Two
+remarks on how the constraints of the dual arise, because both are easy to state
+loosely:
+\begin{itemize}
+\item $\mu_i\ge0$ and $\mu_i=C-\alpha_i$ together give $\alpha_i\le C$, which with
+      $\alpha_i\ge0$ is the box $0\le\alpha\le C\one$;
+\item $b$ enters $L$ only through the term $-b\sum_i\alpha_iy_i$, and $b$ is
+      \emph{free}, so $\inf_b L=-\infty$ unless $\sum_i\alpha_iy_i=0$. The
+      $b$-stationarity condition therefore does not disappear when it is used to
+      cancel that term: it survives as the constraint $y^{\!\top}\alpha=0$, which
+      is exactly the statement that $\operatorname{dom}$ of the dual function
+      excludes every $\alpha$ violating it.
+\end{itemize}
+Writing the result as a minimisation of the negative, the dual of~\eqref{eq:primal}
+is the convex QP
 \begin{equation}
 \label{eq:dual}
 \tag{D}
@@ -110,6 +138,39 @@ $\alpha_i>0$ are the \emph{support vectors}; those with $0<\alpha_i<C$ are the
 \emph{free} support vectors, and $b$ is recovered from any of them via
 $b=y_i-\sum_j\alpha_jy_j\kappa(x_j,x_i)$. The count of free support vectors will
 turn out to control the cost of (A1); see Section~\ref{sec:cost}.
+
+\subsection{Recovering the primal variables}
+\label{sec:recovery}
+Given an optimal $\alpha^\star$ of~\eqref{eq:dual}, the primal variables come back as
+\[
+w^\star=\sum_i\alpha^\star_iy_i\phi_i,
+\qquad
+\xi^\star_i=\bigl[\,1-y_i(\inner{w^\star}{\phi_i}+b^\star)\,\bigr]^+ ,
+\]
+the first directly from the representer identity and the second from primal
+feasibility of the margin constraint together with complementarity on $\xi_i\ge0$
+(note the factor $y_i$ inside: $\xi_i$ measures the violation of \emph{the sample's
+own} margin, not of the hyperplane equation).
+
+The bias $b^\star$ deserves more care, and it is where this report departs from the
+usual treatment. The textbook recipe reads $b^\star$ off any free support vector via
+\eqref{eq:kkt}, and averages over them for stability; but the average is only as
+good as the set of indices identified as free, so a solver that is merely close to
+optimal produces a $b$ that degrades the measured primal--dual gap. The better
+observation --- made, for instance, in the interior-point treatment of the same
+model in Project~25 --- is that $b$ enters the Lagrangian only through
+$-b\sum_i\alpha_iy_i$, so \emph{$b$ is the multiplier of the equality constraint
+$y^{\!\top}\alpha=0$}. Any algorithm that produces that multiplier explicitly can
+use it directly, with no support-vector bookkeeping at all.
+
+For an interior-point method this multiplier is one of the iterates. What is worth
+noting here is that our relaxation supplies it too, and for free: the multiplier
+$\theta$ of the single equality inside the continuous knapsack of
+Section~\ref{sec:knapsack} \emph{is} $b$, as \eqref{eq:theta_is_b} proves by LP
+duality. So (A1) returns the bias at every oracle call rather than only at
+optimality, and the identity holds by construction rather than by an argument about
+which $\alpha_i$ are free. We verify this numerically against a general-purpose QP
+solver to $10^{-7}$.
 
 \subsection{Kernels}
 Only inner products appear in~\eqref{eq:dual}, so $\phi$ need never be formed. We use
