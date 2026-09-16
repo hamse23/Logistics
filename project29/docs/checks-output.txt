@@ -1,0 +1,52 @@
+==============================================================================
+1. the oracle: O(m log m) continuous knapsack  vs  a general LP solver
+==============================================================================
+   worst |value difference| / |y^T alpha| / bound violation = 1.364e-12   PASS
+
+==============================================================================
+2. strong duality:   max_lambda phi(lambda) == v(D)  (no duality gap)
+==============================================================================
+   linear C=0.1   v(D)=-1.07618624  max phi=-1.07618624  rel.err=2.21e-09  iters= 20  PASS
+   linear C=1.0   v(D)=-3.48321287  max phi=-3.48321287  rel.err=2.19e-10  iters= 42  PASS
+   linear C=10.0  v(D)=-4.61630939  max phi=-4.61630940  rel.err=9.12e-11  iters= 52  PASS
+      rbf C=0.1   v(D)=-3.72377188  max phi=-3.72377189  rel.err=3.79e-09  iters= 20  PASS
+      rbf C=1.0   v(D)=-8.00143841  max phi=-8.00143841  rel.err=2.13e-10  iters= 46  PASS
+      rbf C=10.0  v(D)=-9.34953024  max phi=-9.34953026  rel.err=2.00e-09  iters=400  PASS
+     poly C=0.1   v(D)=-1.16608286  max phi=-1.16608286  rel.err=1.60e-09  iters= 91  PASS
+     poly C=1.0   v(D)=-2.75782039  max phi=-2.75782040  rel.err=3.35e-09  iters= 32  PASS
+     poly C=10.0  v(D)=-3.05232187  max phi=-3.05232187  rel.err=1.15e-10  iters= 91  PASS
+
+==============================================================================
+3. weak duality:  phi(lambda) <= v(D)  for arbitrary lambda
+==============================================================================
+   violations over 3000 random multipliers: 0   PASS
+
+==============================================================================
+4. primal recovery: the master's convex multipliers give alpha* and b
+==============================================================================
+   linear  ||alpha_bundle - alpha_qp||/||alpha_qp|| = 8.74e-08   PASS
+   linear  |b_bundle - b_qp| = 8.42e-08   (b = -theta, the knapsack multiplier)   PASS
+      rbf  ||alpha_bundle - alpha_qp||/||alpha_qp|| = 1.78e-07   PASS
+      rbf  |b_bundle - b_qp| = 1.38e-07   (b = -theta, the knapsack multiplier)   PASS
+
+==============================================================================
+5. the identity  max_{alpha in D} sum_i a_i(1 - y_i g_i) = min_b C*sum_i hinge
+   (i.e. the multiplier of y^T alpha = 0 IS the SVM bias b)
+==============================================================================
+   mismatches over 200 random score vectors: 0   PASS
+
+==============================================================================
+6. (M) end to end: One-vs-Rest, (A1) bundle vs (A2) general-purpose QP
+==============================================================================
+    iris linear: acc bundle=0.9556  acc qp=0.9556  PASS   bundle iters/class=[14, 21, 22] seeded=[0, 1, 2]  [0.27s vs 0.04s]
+    iris    rbf: acc bundle=0.9778  acc qp=0.9778  PASS   bundle iters/class=[30, 23, 38] seeded=[0, 1, 2]  [0.47s vs 0.03s]
+    wine linear: acc bundle=1.0000  acc qp=1.0000  PASS   bundle iters/class=[43, 59, 17] seeded=[0, 1, 2]  [0.64s vs 0.06s]
+    wine    rbf: acc bundle=1.0000  acc qp=1.0000  PASS   bundle iters/class=[106, 120, 186] seeded=[0, 1, 2]  [3.84s vs 0.05s]
+
+==============================================================================
+7. does re-using the bundle across One-vs-Rest classes help?
+==============================================================================
+    iris linear: oracle calls  none=  66( +0.0%)  warm=  66( +0.0%)  cuts=  76(+15.2%)  both=  68( +3.0%)
+    iris    rbf: oracle calls  none=  92( +0.0%)  warm=  90( -2.2%)  cuts=  88( -4.3%)  both=  98( +6.5%)
+    wine linear: oracle calls  none= 108( +0.0%)  warm= 113( +4.6%)  cuts= 106( -1.9%)  both= 109( +0.9%)
+    wine    rbf: oracle calls  none= 469( +0.0%)  warm= 808(+72.3%)  cuts= 478( +1.9%)  both= 815(+73.8%)
