@@ -258,13 +258,22 @@ linear in $\alpha$ over $D$. Hence
 \begin{equation}
 \label{eq:phi}
 \boxed{\ \
-\varphi(\lambda)\ =\ -\tfrac12\|\lambda\|^2
+\psi(\lambda)\ =\ -\tfrac12\|\lambda\|^2
 \ +\ \min_{\alpha\in D}\ c(\lambda)^{\!\top}\alpha,
 \qquad
 c_i(\lambda)=-\bigl(1+y_i\inner{\lambda}{\phi_i}\bigr),
 \ \ }
 \end{equation}
-and the Lagrangian dual of~\eqref{eq:split} is $\max_{\lambda\in\Hs}\varphi(\lambda)$.
+and the Lagrangian dual of~\eqref{eq:split} is $\max_{\lambda\in\Hs}\psi(\lambda)$.
+
+In the vocabulary of the course's treatment of partial Lagrangian relaxation, the
+representer identity is the \emph{complicating} constraint --- it is what couples
+$w$ to $\alpha$ and so what creates the dense $Q$ --- while $\alpha\in D$ are the
+\emph{easy} constraints, kept in the relaxed problem because they are exactly what
+makes it a knapsack. The usual warning that $\psi(\lambda)$ may be $-\infty$ for
+some $\lambda$, and that one then has to neutralise the offending directions of zero
+curvature, does not apply here: $D$ is compact, so the relaxed problem always has a
+finite optimum and $\psi$ is finite on all of $\Hs$.
 
 \subsection{The relaxed problem is a continuous knapsack}
 \label{sec:knapsack}
@@ -292,37 +301,37 @@ Lagrangian of~\eqref{eq:kp} \emph{and} is feasible, hence optimal. Forming $c$ c
 one kernel product; the rest costs $O(m\log m)$. This settles (R1): a dense QP has
 been replaced by a sort.
 
-\subsection{Properties of $\varphi$}
+\subsection{Properties of $\psi$}
 \begin{proposition}[finiteness]
 $D$ is a non-empty compact polytope, so the minimum in~\eqref{eq:phi} is attained
-and finite for every $\lambda$. Hence $\varphi:\Hs\to\R$ is finite everywhere,
+and finite for every $\lambda$. Hence $\psi:\Hs\to\R$ is finite everywhere,
 concave and upper semicontinuous.
 \end{proposition}
 This is unusually convenient: no feasibility (``infinite'') cuts are ever needed,
 and every oracle call returns a valid lower bound on the optimal value.
 
 \begin{proposition}[structure and non-differentiability]
-$\varphi=\varphi_{\mathrm{sm}}+\varphi_{\mathrm{pl}}$ where
-$\varphi_{\mathrm{sm}}(\lambda)=-\tfrac12\|\lambda\|^2$ is smooth and known in
-closed form, and $\varphi_{\mathrm{pl}}(\lambda)=\min_{\alpha\in D}c(\lambda)^{\!\top}\alpha$
+$\psi=\psi_{\mathrm{sm}}+\psi_{\mathrm{pl}}$ where
+$\psi_{\mathrm{sm}}(\lambda)=-\tfrac12\|\lambda\|^2$ is smooth and known in
+closed form, and $\psi_{\mathrm{pl}}(\lambda)=\min_{\alpha\in D}c(\lambda)^{\!\top}\alpha$
 is a minimum of finitely many affine functions of $\lambda$ (one per vertex of $D$),
-hence concave polyhedral. $\varphi$ fails to be differentiable exactly where
+hence concave polyhedral. $\psi$ fails to be differentiable exactly where
 \eqref{eq:kp} has multiple optima, i.e. where some reduced cost vanishes,
 $c_i-\theta^\star y_i=0$.
 \end{proposition}
 Unwinding that condition with $w=-\lambda$ gives $y_i\inner{w}{\phi_i}+\theta^{\star}y_i=1$:
-the kinks of $\varphi$ sit \emph{exactly} on the support-vector condition
+the kinks of $\psi$ sit \emph{exactly} on the support-vector condition
 $y_if(x_i)=1$ of~\eqref{eq:kkt}. Since any non-degenerate SVM has free support
-vectors, the maximiser of $\varphi$ \emph{is} a point of non-differentiability. This
+vectors, the maximiser of $\psi$ \emph{is} a point of non-differentiability. This
 settles (R3): the non-smoothness is not incidental, it is the solution.
 
 \begin{proposition}[no duality gap]
 \eqref{eq:split} is convex, its coupling constraint is affine and $D$ is compact;
-therefore $\max_\lambda\varphi(\lambda)=v(\mathrm{D}')=v(\mathrm{D})$, and the
+therefore $\max_\lambda\psi(\lambda)=v(\mathrm{D}')=v(\mathrm{D})$, and the
 maximiser is $\lambda^\star=-w^\star$.
 \end{proposition}
 The multiplier of the relaxed identity is thus, up to sign, the primal weight
-vector itself. A supergradient of $\varphi$ at $\lambda$ is the violation of the
+vector itself. A supergradient of $\psi$ at $\lambda$ is the violation of the
 relaxed constraint,
 \begin{equation}
 \label{eq:supergrad}
@@ -334,10 +343,10 @@ Section~\ref{sec:kernelised} in general.
 
 \subsection{What this dual actually is}
 \label{sec:whatitis}
-It is worth identifying $\max_\lambda\varphi$ in closed form. Substituting
+It is worth identifying $\max_\lambda\psi$ in closed form. Substituting
 $w=-\lambda$ in~\eqref{eq:phi},
 \[
-\max_{\lambda}\varphi(\lambda)
+\max_{\lambda}\psi(\lambda)
 \iff
 -\min_{w}\Bigl\{\tfrac12\|w\|^2+\max_{\alpha\in D}\sum_i\alpha_i\bigl(1-y_i\inner{w}{\phi_i}\bigr)\Bigr\},
 \]
@@ -360,50 +369,55 @@ methods for regularised risk minimisation of Joachims (KDD~2006), Teo et al.
 (JMLR~2010) and Franc \& Sonnenburg (ICML~2008) converge in $O(1/\varepsilon)$
 iterations, improving to linear under the strong convexity of $\tfrac12\|w\|^2$.
 
-\subsection{Relation to bundle methods for regularised risk minimisation}
+\subsection{Relation to the nonsmooth formulation of the course slides}
 \label{sec:bmrm}
-Section~\ref{sec:whatitis} showed that $\max_\lambda\varphi$ is the hinge-loss
-primal, so it is fair to ask whether (A1) is anything more than the known
-cutting-plane / bundle methods applied directly to that primal (Joachims KDD~2006;
-Teo et al.\ JMLR~2010; Franc \& Sonnenburg ICML~2008), and in particular whether
-dualising the representer identity buys anything at all. We state the relationship
-precisely rather than leave it implicit, because the answer is sharper than it
-first appears.
+The SVM appears in the course's own deck on nondifferentiable unconstrained
+optimization as the motivating example, in the form
+$\min_{w,b}\ \|w\|^2+C\sum_{i\in I}\max\{1-y_i(\inner{w}{x_i}-b),0\}$, whose
+nondifferentiability is precisely what motivates bundle methods. Since
+Section~\ref{sec:whatitis} shows that $\max_\lambda\psi$ is that same function, we
+must say clearly what dualising the representer identity adds over simply running a
+bundle method on it --- which is also what the published cutting-plane methods for
+regularised risk minimisation do (Joachims KDD~2006; Teo et al.\ JMLR~2010; Franc \&
+Sonnenburg ICML~2008).
 
-Those methods minimise $\tfrac{\lambda}{2}\|w\|^2+\tfrac1m\sum_i\ell(f_i,y_i)$ and
-take as their cut the subgradient of the empirical risk, whose support is
-$\{i: y_if_i<1\}$. Our oracle instead returns the knapsack solution
-$\alpha^\star(\lambda)$. These are not merely similar: measured on \textsc{wine}
-with a Gaussian kernel at random multipliers, $\alpha^\star(\lambda)$ agrees with
-the plain hinge pattern $[\,C\ \text{if}\ y_if_i<1,\ 0\ \text{otherwise}\,]$ on only
-$41\%$--$83\%$ of the samples, but agrees with the \emph{biased} pattern
-$[\,C\ \text{if}\ y_i(f_i+b)<1\,]$ on $100\%$ of them, where $b=-\theta$ is the
-multiplier the knapsack itself produces. In other words:
+The answer is \emph{not} that the bias makes a direct approach impossible: $f(w,b)$
+is convex in $(w,b)$ jointly and a subgradient in both variables is immediate, so
+one can perfectly well put $b$ in the bundle. The answer is that our relaxation
+minimises over $b$ \emph{exactly}, at every oracle call, instead of approximating
+the $b$ direction with cutting planes. The knapsack multiplier $\theta$
+of~\eqref{eq:theta_is_b} \emph{is} that exact partial minimisation, and the sort of
+Section~\ref{sec:knapsack} is how it is computed. Equivalently: we bundle
+$g(w)=\min_b f(w,b)$ rather than $f(w,b)$, and $g$ is the better-conditioned object
+because one of its directions has been eliminated in closed form.
+
+We measured the difference against the direct baseline, keeping everything else
+identical --- the quadratic term treated exactly, a cutting-plane model of the rest,
+the same proximal term and the same master solver --- so that the only difference is
+whether $b$ is a bundle variable:
 \begin{center}
-\emph{the oracle of (A1) is the hinge-loss oracle with the bias optimised out
-exactly, at every iteration,}
+\begin{tabular}{llrrr}
+\toprule
+dataset & kernel & $b$ in the bundle & $b$ eliminated (ours) & ratio\\
+\midrule
+\textsc{wine}   & linear   & 137 & 29 & $4.7\times$\\
+\textsc{wine}   & Gaussian & \multicolumn{1}{c}{400 (gap $6\cdot10^{-5}$)} & 133 & did not converge\\
+\textsc{iris}   & Gaussian & 96 & 24 & $4.0\times$\\
+\textsc{cancer} & linear   & 220 & 52 & $4.2\times$\\
+\bottomrule
+\end{tabular}
 \end{center}
-and the sorting of Section~\ref{sec:knapsack} is precisely that one-dimensional
-minimisation over $b$.
+(iterations to a relative gap of $10^{-8}$; the Gaussian \textsc{wine} baseline was
+still at $6\cdot10^{-5}$ after the 400-iteration cap, where ours reached
+$1.1\cdot10^{-8}$ in 133.) A consistent factor of four to five, and one instance
+where the direct method does not reach tolerance at all.
 
-This is what the dualisation buys, and it is not cosmetic. The cited methods drop
-the bias term --- as does the implementation of Tortorella \& Ferrante
-(\texttt{bundle-svm}, 2017), whose decision function is $\operatorname{sign}\sum_i
-u_i\kappa(x_i,x)$ with no intercept --- and they drop it for a reason: with a bias
-the empirical risk is no longer a plain separable sum, and a closed-form
-subgradient is no longer available. What restores it is exactly the equality
-$y^{\!\top}\alpha=0$, which is in $D$ \emph{only because} $b$ was a free variable of
-\eqref{eq:primal}. Relaxing the representer identity, rather than writing the primal
-down directly, is what puts that equality in the relaxed problem and hence what
-makes the biased oracle closed-form.
-
-Two further things follow from the dual route that the direct primal route does not
-give: the master multipliers return a feasible $\hat\alpha\in D$ and therefore the
-SVM dual variables themselves (Section~\ref{sec:dw}), and $\varphi(\lambda)$ and the
-restricted problem bracket $v(\mathrm{D})$ from both sides, whereas the primal
-methods bound only their own objective. We claim no more than this: the family of
-cuts is the same, the function being optimised is the same, and what the Lagrangian
-formulation adds is the bias, the primal variables and the two-sided bound.
+That is the concrete content of the dualisation, and we claim exactly this much: the
+family of cuts and the function being optimised are the same as in the direct
+approach, and what relaxing the representer identity adds is (i) the exact
+elimination of $b$ at every oracle call, worth the factor above, (ii) the SVM dual
+variables, through the aggregated solution of Section~\ref{sec:dw}, and (iii) a
+two-sided bound on $v(\mathrm{D})$ rather than a bound on one's own objective only.
 
 \section{(A1): the bundle method}
 \label{sec:bundle}
@@ -413,7 +427,7 @@ Because $-\tfrac12\|\lambda\|^2$ is known in closed form, we linearise only the
 polyhedral part --- a \emph{generalized} (structured) bundle method. Each oracle call
 returns some $\alpha^j\in D$, which gives the affine upper model
 \[
-\varphi_{\mathrm{pl}}(\lambda)\ \le\ c(\lambda)^{\!\top}\alpha^j
+\psi_{\mathrm{pl}}(\lambda)\ \le\ c(\lambda)^{\!\top}\alpha^j
 = -\,\one^{\!\top}\alpha^j-\inner{\lambda}{\textstyle\sum_i\alpha^j_iy_i\phi_i}
 =: -a_j-\inner{\lambda}{\Phi^{\!\top}Y\alpha^j} .
 \]
@@ -443,7 +457,7 @@ off-the-shelf QP solver, which the project statement allows.
 
 \subsection{Primal recovery, and the Dantzig--Wolfe identity}
 \label{sec:dw}
-Let $\hat\alpha:=\sum_j\vartheta_j\alpha^j$. Since $\vartheta\in\Delta^J$ and
+Let $\hat\alpha:=\sum_j\vartheta_j\alpha^j$ be the \emph{aggregated solution} built from the master problem's dual multipliers. Since $\vartheta\in\Delta^J$ and
 $D$ is convex, $\hat\alpha\in D$ --- it is a \emph{feasible} solution
 of~\eqref{eq:dual} at every iteration. Moreover $\sum_j\vartheta_jb_j=\Phi^{\!\top}Y\hat\alpha$
 and $\sum_j\vartheta_ja_j=\one^{\!\top}\hat\alpha$, so for $t\to\infty$
@@ -459,7 +473,7 @@ consequences:
 \begin{itemize}
 \item the master returns the primal solution $\hat\alpha\to\alpha^\star$, so nothing
       extra is needed to recover the classifier;
-\item $\varphi(\lambda)\le v(\mathrm{D})\le \tfrac12\hat\alpha^{\!\top}Q\hat\alpha-\one^{\!\top}\hat\alpha$
+\item $\psi(\lambda)\le v(\mathrm{D})\le \tfrac12\hat\alpha^{\!\top}Q\hat\alpha-\one^{\!\top}\hat\alpha$
       at \emph{every} iteration, a \textbf{certified gap} --- which decomposition
       algorithms for the SVM such as SMO do not provide.
 \end{itemize}
@@ -570,7 +584,7 @@ solved by inspection: put the whole budget on the most negative coefficient, or 
 none of it. Hence
 \begin{equation}
 \label{eq:budgetdual}
-\varphi(\alpha)=\sum_{i,k}\alpha^k_i-\tfrac12\sum_{k}(\alpha^k)^{\!\top}Q^k\alpha^k
+\psi(\alpha)=\sum_{i,k}\alpha^k_i-\tfrac12\sum_{k}(\alpha^k)^{\!\top}Q^k\alpha^k
 -\sum_{i}B_i\Bigl[\max_k\bigl(\alpha^k_i-C\bigr)\Bigr]^+ ,
 \end{equation}
 on $\{\alpha\ge0:\ \sum_i\alpha^k_iy^k_i=0\ \ \forall k\}$. The budget replaces the
@@ -589,7 +603,7 @@ $10^{-8}$ for every $B\ge B_{\min}$. A single outlier destroys the training prob
 \paragraph{The repair.} Soften the budget: $\sum_k\xi^k_i\le B_i+z_i$ with $z_i\ge0$
 penalised by $Dz_i$. The $\xi$ subproblem stays an LP solved by inspection, the model
 is always feasible, and boundedness of the $z$ term restores a box,
-$0\le\alpha\le (C+D)\one$, making $\mathrm{dom}\,\varphi$ compact. We verified
+$0\le\alpha\le (C+D)\one$, making $\mathrm{dom}\,\psi$ compact. We verified
 strong duality for the repaired model to $10^{-8}$ across a range of $B$, $D$, $q$
 and $m$.
 

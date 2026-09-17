@@ -33,31 +33,37 @@ easier than the original, the dual is n- or m-dimensional rather than univariate
 it is non-differentiable exactly where the knapsack ties, which unwinds to
 yᵢf(xᵢ) = 1. D is a non-empty compact polytope, so φ is finite everywhere.
 
-**The point we would like you to rule on before we go further.** max φ turns out to
-be the hinge-loss primal ½‖w‖² + C Σ [1 − yᵢ(⟨w,φᵢ⟩ + b)]⁺. We know this is
-biconjugacy and not a discovery, and we can see the objection: that we have dualised
-our way back to the problem we started from, and are then running a known
-cutting-plane method on it. We think the dualisation earns its place, for one
-specific reason we measured rather than assumed. On wine with a Gaussian kernel, the
-knapsack solution α*(λ) agrees with the plain hinge subgradient pattern
-[C if yᵢfᵢ < 1] on only 41–83% of samples, but with the biased pattern
-[C if yᵢ(fᵢ + b) < 1] on 100% of them, where b is the multiplier the knapsack itself
-returns. So our oracle is the hinge oracle with the bias optimised out exactly at
-every iteration, and the sort is that one-dimensional minimisation over b. The
-cutting-plane and bundle methods for regularised risk minimisation drop the bias
-precisely because with it the empirical risk is no longer a separable sum and the
-closed-form subgradient is lost; what restores it is the equality yᵀα = 0, which is
-in D only because b was a free variable of the primal. Relaxing the identity, rather
-than writing the primal down directly, is what makes a biased oracle closed-form.
+**The point we would like you to rule on before we go further.** max ψ turns out to
+be the hinge-loss primal ‖w‖² + C Σ max{1 − yᵢ(⟨w,xᵢ⟩ − b), 0} — which is the SVM
+exactly as it appears in your nondifferentiable-optimization slides, as the
+motivation for bundle methods. So the obvious objection is that we have dualised our
+way back to the problem the course already starts from, and are running a bundle
+method on it.
 
-Two further things follow that the direct primal route does not give: the master
-multipliers return a feasible α̂ ∈ D, so we recover the SVM dual variables and not
-just the weights; and φ(λ) together with the restricted problem bracket v(D) from
-both sides, so every iteration carries a certified gap.
+We think the dualisation earns its place, and we measured rather than argued it. It
+is not that the bias makes a direct approach impossible — f(w,b) is convex in both
+and a subgradient in (w,b) is immediate, so b can simply go in the bundle. It is
+that our relaxation minimises over b *exactly* at every oracle call instead of
+approximating that direction with cutting planes: the knapsack multiplier θ is that
+partial minimisation, and the sort is how it is computed. We are bundling
+g(w) = min_b f(w,b) rather than f(w,b). Keeping everything else identical — quadratic
+term exact, same cutting-plane model, same proximal term, same master solver — so
+that the only difference is whether b is a bundle variable:
 
-We are claiming no more than that: the family of cuts and the function being
-optimised are the same as in the published primal methods, and what the Lagrangian
-formulation adds is the bias, the dual variables, and the two-sided bound. If you
+    dataset   kernel     b in bundle      b eliminated (ours)
+    wine      linear     137 iters        29
+    wine      Gaussian   400 (gap 6e-5)   133 (gap 1.1e-8)
+    iris      Gaussian    96              24
+    cancer    linear     220              52
+
+A consistent factor of four to five, and one instance where the direct method does
+not reach tolerance at all.
+
+We claim exactly that much and no more: the family of cuts and the function being
+optimised are the same as in the direct approach; what relaxing the representer
+identity adds is the exact elimination of b at every oracle call, the SVM dual
+variables via the aggregated solution from the master's dual multipliers, and a
+two-sided bound on v(D) rather than a bound on our own objective only. If you
 consider that too thin to count as a different dual approach, we would rather know
 now than after the experiments.
 
