@@ -245,7 +245,13 @@ Before choosing what to dualise it is worth recalling what the choice is suppose
 buy. Given a problem $\min\{f(x): Ax\le b,\ x\in X\}$, relaxing the constraints
 $Ax\le b$ with multipliers $\lambda$ removes them from the feasible set and charges
 for their violation in the objective, leaving
-$\psi(\lambda)=\min\{f(x)+\lambda(b-Ax):x\in X\}$. Three things follow, and they
+\[
+\psi(\lambda)=\min\{f(x)+\lambda(b-Ax)\ :\ x\in X\} .
+\]
+Note that this defines not one problem but a \emph{family} of them, one for each
+$\lambda$. We call the minimisation on the right \emph{the relaxed problem}; solving
+it for a single $\lambda$ is one call to the oracle, and it is what an algorithm for
+the dual does over and over. Three things follow, and they
 hold whatever $f$ and $X$ look like:
 \begin{itemize}
 \item $\psi(\lambda)\le v(\mathrm{P})$ for every $\lambda$, so \emph{every} oracle
@@ -361,14 +367,20 @@ finite on all of $\Hs$.
 
 \section{The relaxed problem is a continuous knapsack}
 \label{sec:knapsack}
-The inner problem in~\eqref{eq:psi} is
+Of the two pieces the relaxed problem splits into, the one in $w$ was disposed of in
+closed form above. The one that is actually solved at every oracle call is the piece
+in $\alpha$:
 \begin{equation}
 \label{eq:kp}
 \tag{KP}
 \min\ c^{\!\top}\alpha \qquad\text{s.t.}\qquad y^{\!\top}\alpha=0,\quad 0\le\alpha\le C\one,
 \end{equation}
-a linear program over a box with a \emph{single} equality constraint: the classical
-\emph{continuous knapsack} problem. Relaxing that one equality with a scalar $\theta$
+a linear objective, box bounds, and \emph{exactly one} further linear constraint.
+That is the defining shape of the classical \emph{continuous knapsack} problem ---
+continuous, or fractional, because each $\alpha_i$ may take any value in $[0,C]$,
+where the $0/1$ knapsack would have to take an item whole. It is worth a name
+because it is one of the problems that can be solved exactly by sorting, with no
+linear programming solver involved. Relaxing that one equality with a scalar $\theta$
 makes the box minimiser explicit,
 \[
 \alpha_i(\theta)=\begin{cases}
@@ -383,7 +395,8 @@ scanning (or by median search in $O(m)$ expected time). Splitting the tied compo
 to make the equality hold exactly produces an $\alpha$ that minimises the Lagrangian
 of~\eqref{eq:kp} \emph{and} is feasible, hence optimal. Forming $c$ costs one kernel
 product; the rest costs $O(m\log m)$. This settles (R1): a dense QP has been replaced
-by a sort.
+by a sort. The scalar $\theta$ introduced here to solve~\eqref{eq:kp} is not merely a
+device: Section~\ref{sec:whatitis} shows that it is the SVM bias $b$.
 
 The same structure --- relax a single equality, obtain a separable problem whose
 solution is piecewise linear in the multiplier with one breakpoint per variable ---
