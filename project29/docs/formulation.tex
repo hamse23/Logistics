@@ -228,6 +228,31 @@ that case.
 \chapter{The Lagrangian Dual}
 \label{ch:dual}
 
+\section{What a Lagrangian relaxation is for}
+\label{sec:whyDual}
+Before choosing what to dualise it is worth recalling what the choice is supposed to
+buy. Given a problem $\min\{f(x): Ax\le b,\ x\in X\}$, relaxing the constraints
+$Ax\le b$ with multipliers $\lambda$ removes them from the feasible set and charges
+for their violation in the objective, leaving
+$\psi(\lambda)=\min\{f(x)+\lambda(b-Ax):x\in X\}$. Three things follow, and they
+hold whatever $f$ and $X$ look like:
+\begin{itemize}
+\item $\psi(\lambda)\le v(\mathrm{P})$ for every $\lambda$, so \emph{every} oracle
+      call returns a valid lower bound on the optimal value;
+\item if a feasible point can be recovered from $x(\lambda)$, one also has a valid
+      upper bound, and hence a readily available estimate of the gap at every
+      iteration;
+\item $\psi$ is concave and its supergradient is the constraint violation
+      $b-Ax(\lambda)$, so the dual is a well-behaved problem even when the original
+      is not.
+\end{itemize}
+The price is that one now has to search over $\lambda$. Whether the trade is worth
+making therefore depends entirely on \emph{what is left in the relaxed problem}: the
+constraints to dualise are the \emph{complicating} ones, and the ones to keep are
+those that make the residual problem easy. Section~\ref{sec:choice} shows that for
+the SVM dual the obvious candidates are exactly the wrong ones, and
+Section~\ref{sec:knapsack} that one non-obvious candidate is exactly the right one.
+
 \section{Which constraints to dualise}
 \label{sec:choice}
 For a Lagrangian dual approach to be worth building, the relaxation must satisfy:
@@ -240,15 +265,33 @@ For a Lagrangian dual approach to be worth building, the relaxation must satisfy
   smooth method is preferable.
 \end{description}
 
-Relaxing the single equality $y^{\!\top}\alpha=0$ in~\eqref{eq:dual} violates (R1)
-and (R2): what is left is
-\[
-\min\Bigl\{\tfrac12\alpha^{\!\top}Q\alpha-\one^{\!\top}\alpha+\theta\,y^{\!\top}\alpha
-\ :\ 0\le\alpha\le C\one\Bigr\},
-\]
-a box-constrained QP with the \emph{same dense Hessian} --- the unbiased SVM, no
-easier than the original --- and the dual is univariate. Relaxing the box
-$\alpha\le C\one$ fares no better: the relaxation is again a QP in $Q$.
+The obvious candidate is the single equality $y^{\!\top}\alpha=0$. Attaching to it a
+free multiplier $\theta\in\R$ and keeping the box as the easy constraint gives the
+dual function
+\begin{equation}
+\label{eq:badrelax}
+\psi(\theta)=\min\Bigl\{\tfrac12\alpha^{\!\top}Q\alpha-\one^{\!\top}\alpha
++\theta\,y^{\!\top}\alpha \ :\ 0\le\alpha\le C\one\Bigr\}.
+\end{equation}
+Since $y^{\!\top}\alpha=0$ is what remained of stationarity in $b$, dropping it
+removes the bias from the model: \eqref{eq:badrelax} is the bias-free SVM with a
+linear term $\theta\,y^{\!\top}\alpha$ pricing the class imbalance, and choosing
+$\theta$ amounts to choosing how hard to push the solution towards balance. It is an
+entirely natural thing to try, and it fails all three tests at once:
+\begin{itemize}
+\item \textbf{(R1)} the minimisation in~\eqref{eq:badrelax} is still a QP with the
+      \emph{same dense Hessian} $Q$. A single scalar constraint has been removed and
+      the whole difficulty left in place;
+\item \textbf{(R2)} $\theta$ is one number, so the Lagrangian dual is univariate and
+      a bisection solves it in a handful of evaluations --- there is nothing for a
+      bundle method to do;
+\item \textbf{(R3)} worse, when $Q\succ0$ --- which is the typical case for a
+      Gaussian kernel --- the minimiser of~\eqref{eq:badrelax} is unique, hence
+      $\psi\in C^1$ and the dual is smooth, so even a nonsmooth method would be the
+      wrong tool.
+\end{itemize}
+Relaxing the box $\alpha\le C\one$ instead fares no better: the relaxation is again a
+QP in $Q$, and now with $m$ multipliers but no easier a subproblem.
 
 The reason is structural: in~\eqref{eq:dual} \emph{no constraint is the difficulty}.
 The difficulty is $Q$ itself, a dense $m\times m$ matrix. So the object to dualise is
