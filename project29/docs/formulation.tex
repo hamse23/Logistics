@@ -139,8 +139,19 @@ w=\sum_{i=1}^m \alpha_i y_i \phi_i,
 \qquad
 \alpha_i+\mu_i=C .
 \end{equation}
-The first is the \emph{representer identity}; it is the hinge on which this whole
-project turns --- Chapter~\ref{ch:dual} dualises precisely this condition.
+The first of these deserves a name and a moment's attention, because
+Chapter~\ref{ch:dual} dualises precisely it. It says that at the optimum $w$ is a
+linear combination of the training points, with coefficients $\alpha_iy_i$; it is
+the \emph{representer identity}, the same statement as the representer theorem of
+kernel methods, and it is what makes kernels usable at all: however large the
+dimension of $\Hs$, the optimal $w$ is described by $m$ numbers.
+
+It is also, as we are about to see, where $Q$ comes from. Substituting it into
+$\tfrac12\|w\|^2$ turns a squared norm into
+$\tfrac12\sum_{i,j}\alpha_i\alpha_jy_iy_j\kappa(x_i,x_j)=\tfrac12\alpha^{\!\top}Q\alpha$:
+before the substitution there is no $Q$ anywhere in the problem, and after it there
+is a dense $m\times m$ matrix. The dense Hessian of~\eqref{eq:dual} is therefore not
+intrinsic to the SVM; it is the price of eliminating $w$.
 
 Substituting the three conditions back into $L$ makes every term collapse. Writing
 $K_{ij}=\kappa(x_i,x_j)$, $Y=\operatorname{diag}(y)$ and $Q=YKY$:
@@ -300,7 +311,10 @@ $Q$.
 
 \section{Dualising the representer identity}
 $Q$ appears in~\eqref{eq:dual} only because $w$ was eliminated through the
-representer identity~\eqref{eq:representer}. Put $w$ back:
+representer identity~\eqref{eq:representer}. In the standard derivation that identity
+is used as a \emph{substitution}: a fact about the optimum, exploited to remove a
+variable. A substitution cannot be dualised --- but a constraint can. So we put $w$
+back as an independent variable and \emph{impose} the identity instead of using it:
 \begin{equation}
 \label{eq:split}
 \tag{D$'$}
@@ -316,9 +330,15 @@ identity, with a free multiplier $\lambda\in\Hs$:
 L(\alpha,w;\lambda)=\tfrac12\|w\|^2-\one^{\!\top}\alpha
 +\Bigl\langle \lambda,\ w-\sum_i\alpha_iy_i\phi_i \Bigr\rangle .
 \]
-The two groups of variables separate. Minimising over $w\in\Hs$ is unconstrained and
-gives $w(\lambda)=-\lambda$ with value $-\tfrac12\|\lambda\|^2$; what remains is
-linear in $\alpha$ over $D$. Hence
+The point of doing this is that $w$ and $\alpha$ are now \emph{untied}. They are two
+descriptions of the same hyperplane, and~\eqref{eq:split} forces them to agree;
+relaxing that constraint lets them disagree and charges a price $\lambda$ for the
+disagreement, so that each may be optimised in whichever form suits it. The two
+groups of variables therefore separate. Minimising over $w\in\Hs$ is unconstrained
+and gives $w(\lambda)=-\lambda$ with value $-\tfrac12\|\lambda\|^2$; what remains is
+\emph{linear} in $\alpha$ over $D$, because $\alpha$ now appears only linearly. The
+matrix $Q$ never forms: it existed only because $w$ and $\alpha$ were the same
+object, and they no longer are. Hence
 \begin{equation}
 \label{eq:psi}
 \boxed{\ \
@@ -407,7 +427,8 @@ therefore $\max_\lambda\psi(\lambda)=v(\mathrm{D}')=v(\mathrm{D})$, and the maxi
 is $\lambda^\star=-w^\star$.
 \end{proposition}
 The multiplier of the relaxed identity is thus, up to sign, the primal weight vector
-itself. A supergradient of $\psi$ at $\lambda$ is the violation of the relaxed
+itself, and the bundle method's task can be read as finding the price at which $w$
+and $\alpha$ agree again. A supergradient of $\psi$ at $\lambda$ is the violation of the relaxed
 constraint,
 \begin{equation}
 \label{eq:supergrad}
