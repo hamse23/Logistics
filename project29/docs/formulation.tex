@@ -249,9 +249,18 @@ for their violation in the objective, leaving
 \psi(\lambda)=\min\{f(x)+\lambda(b-Ax)\ :\ x\in X\} .
 \]
 Note that this defines not one problem but a \emph{family} of them, one for each
-$\lambda$. We call the minimisation on the right \emph{the relaxed problem}; solving
-it for a single $\lambda$ is one call to the oracle, and it is what an algorithm for
-the dual does over and over. Three things follow, and they
+$\lambda$. We call the minimisation on the right \emph{the relaxed problem}.
+
+Solving it for one value of $\lambda$ is what is meant, here and throughout, by a
+call to the \emph{oracle}: a routine that is handed a point $\lambda$ and returns the
+value $\psi(\lambda)$ together with one supergradient of $\psi$ there. The name is
+standard and the idea behind it is that the algorithm neither knows nor needs to know
+how the answer is produced --- $\psi$ has no closed form, cannot be differentiated
+symbolically and cannot be inspected, so probing it point by point is the only thing
+available. Everything in Chapter~\ref{ch:bundle} is built around that restriction,
+and the oracle call is consequently the unit in which we measure work: for the
+relaxation of this chapter one call costs a single kernel product and a sort, and
+the iteration counts reported in Chapter~\ref{ch:exp} are counts of oracle calls. Three things follow, and they
 hold whatever $f$ and $X$ look like:
 \begin{itemize}
 \item $\psi(\lambda)\le v(\mathrm{P})$ for every $\lambda$, so \emph{every} oracle
