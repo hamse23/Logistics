@@ -538,7 +538,27 @@ $\mathcal B=\{(\lambda^h,\psi^h,g^h)\}$, and their pointwise minimum
 \psi_{\mathcal B}(\mu)=\min\bigl\{\ell_{\lambda^h}(\mu)\ :\ (\lambda^h,\psi^h,g^h)\in\mathcal B\bigr\}\ \ge\ \psi(\mu)
 \]
 is the \emph{cutting-plane model} of $\psi$: an upper approximation that improves
-wherever the oracle has been called. Maximising the model in place of $\psi$ is the
+wherever the oracle has been called.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{fig-cuttingplane.pdf}
+\caption{One oracle call at $\lambda$ returns $\psi(\lambda)$ and a supergradient,
+and hence a hyperplane that lies above $\psi$ \emph{everywhere}, not merely near
+$\lambda$: this is what concavity buys. The model is the pointwise minimum of the
+hyperplanes collected so far, so it too lies above $\psi$, and its maximum is an
+upper bound on $\psi^\star$. Each new call adds a hyperplane, which can only lower
+the minimum; the method probes next where the model is highest, since that is the
+only place the maximum can be.}
+\label{fig:cp}
+\end{figure}
+
+Two things in the figure are worth stating explicitly, because the whole method
+rests on them. First, the bound is global: a single call constrains $\psi$ at every
+point of $\Hs$, which is why first-order information about a concave function is far
+more useful than it looks. Second, the model is an \emph{upper} approximation, so
+$\max_\mu\psi_{\mathcal B}(\mu)\ \ge\ \psi^\star$ --- maximising something one can
+actually solve yields a bound on the quantity one cannot. Maximising the model in place of $\psi$ is the
 \emph{master problem}, and unlike $\psi$ it can actually be solved, being a small
 linear or quadratic program.
 
