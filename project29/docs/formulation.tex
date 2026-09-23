@@ -83,6 +83,16 @@ solutions that help in solving the others.
 \chapter{SVM Problem Formulation}
 \label{ch:svm}
 
+\paragraph{Notation.} Throughout, $\inner{a}{b}$ denotes the \emph{inner product}
+(the scalar product) of two elements of the feature space $\Hs$ --- a single real
+number, $\sum_i a_ib_i$ in the finite-dimensional case. We write it this way rather
+than $a^{\!\top}b$ because $\Hs$ may be infinite-dimensional, as it is for the
+Gaussian kernel, so there is no finite column of coordinates to transpose; $a^{\!\top}b$
+is the special case $\Hs=\R^n$. Ordinary vectors of $\R^m$, such as the multipliers
+$\alpha$ and the labels $y$, are written with transposes as usual: $y^{\!\top}\alpha$,
+$\alpha^{\!\top}Q\alpha$. Finally $\one$ is the vector of all ones and
+$[t]^+=\max\{0,t\}$.
+
 The goal of this chapter is to describe the Support Vector Machine and to derive the
 Lagrangian dual formulation that defines the optimization task as a quadratic
 programming problem. The material is standard; it is included because
@@ -93,7 +103,8 @@ usual derivation in front of the reader.
 \section{Soft margin formulation}
 Let $\{(x_i,y_i)\}_{i=1}^m$ with $x_i\in\R^n$ and $y_i\in\{-1,+1\}$, and let
 $\phi:\R^n\to\Hs$ be a feature map into a Hilbert space with reproducing kernel
-$\kappa(x,x')=\inner{\phi(x)}{\phi(x')}$. Write $\phi_i:=\phi(x_i)$.
+$\kappa(x,x')=\inner{\phi(x)}{\phi(x')}$; $\Hs$ is the reproducing kernel Hilbert
+space (RKHS) of $\kappa$, and may be infinite-dimensional. Write $\phi_i:=\phi(x_i)$.
 
 A separating hyperplane $H(w,b)=\{x:\inner{w}{\phi(x)}+b=0\}$ classifies correctly
 with margin at least one when $y_i(\inner{w}{\phi_i}+b)\ge1$ for all $i$, and the
@@ -184,8 +195,9 @@ is the convex QP
 \qquad\text{s.t.}\qquad \alpha\in D:=\bigl\{\alpha:\ y^{\!\top}\alpha=0,\ \ 0\le\alpha\le C\one\bigr\}.
 \end{equation}
 $D$ is a non-empty ($0\in D$) compact polytope and $Q\succeq0$, so~\eqref{eq:dual}
-always has a solution. Slater's condition holds for~\eqref{eq:primal}, hence there
-is no duality gap and the KKT conditions
+always has a solution. Slater's condition holds for~\eqref{eq:primal} --- there is a strictly feasible
+point, obtained by taking $\xi$ large enough --- hence there is no duality gap, that
+is, primal and dual optima coincide and the KKT conditions
 \begin{equation}
 \label{eq:kkt}
 \begin{aligned}
@@ -253,7 +265,15 @@ $\lambda$. We call the minimisation on the right \emph{the relaxed problem}.
 
 Solving it for one value of $\lambda$ is what is meant, here and throughout, by a
 call to the \emph{oracle}: a routine that is handed a point $\lambda$ and returns the
-value $\psi(\lambda)$ together with one supergradient of $\psi$ there. The name is
+value $\psi(\lambda)$ together with one \emph{supergradient} of $\psi$ there --- a
+vector $g$ such that
+\[
+\psi(\mu)\ \le\ \psi(\lambda)+\inner{g}{\mu-\lambda}\qquad\forall\,\mu ,
+\]
+which is the concave counterpart of a subgradient. Where $\psi$ is differentiable the
+gradient is the only such $g$; at a kink there are many, and that multiplicity is
+exactly what makes nondifferentiable optimization harder. Chapter~\ref{ch:bundle}
+is built on this inequality and Figure~\ref{fig:cp} illustrates it. The name is
 standard and the idea behind it is that the algorithm neither knows nor needs to know
 how the answer is produced --- $\psi$ has no closed form, cannot be differentiated
 symbolically and cannot be inspected, so probing it point by point is the only thing
@@ -415,8 +435,9 @@ hyperplane, and (KP) is its bounded-variable analogue.
 \section{Properties of the dual function}
 \begin{proposition}[finiteness]
 $D$ is a non-empty compact polytope, so the minimum in~\eqref{eq:psi} is attained and
-finite for every $\lambda$. Hence $\psi:\Hs\to\R$ is finite everywhere, concave and
-upper semicontinuous.
+finite for every $\lambda$. Hence $\psi:\Hs\to\R$ is finite everywhere and concave
+(and upper semicontinuous, so that it does not jump upwards in the limit --- the
+regularity a maximisation needs for its optimum to be attained).
 \end{proposition}
 This is unusually convenient: no feasibility (``infinite'') cuts are ever needed, and
 every oracle call returns a valid lower bound on the optimal value.
@@ -432,7 +453,8 @@ Write
 \]
 Then $\psi_{\mathrm{sm}}$ is smooth and known in closed form, and
 $\psi_{\mathrm{pl}}$ is a minimum of finitely many affine functions of $\lambda$ (one
-per vertex of $D$), hence concave polyhedral. $\psi$ fails to be differentiable exactly where
+per vertex of $D$), hence concave \emph{polyhedral}: piecewise linear, with finitely
+many pieces. $\psi$ fails to be differentiable exactly where
 \eqref{eq:kp} has multiple optima, i.e.\ where some reduced cost vanishes,
 $c_i-\theta^\star y_i=0$.
 \end{proposition}
@@ -479,9 +501,9 @@ $\theta$ gives, by LP duality,
 \end{equation}
 So the Lagrangian dual of~\eqref{eq:split} is the hinge-loss
 primal~\eqref{eq:hinge}, and \emph{the multiplier $\theta$ of the knapsack equality
-is the SVM bias $b$} --- so $b$ falls out of the oracle for free. That the dual of
-the dual is the primal is of course biconjugacy; the next section says what is
-nevertheless gained.
+is the SVM bias $b$} --- so $b$ falls out of the oracle for free. That the dual of the dual returns the primal is not an accident of this problem
+--- it is the general fact that taking the conjugate of a closed convex function
+twice recovers it --- so the next section says what is nevertheless gained.
 
 \section{Relation to the direct nonsmooth formulation}
 \label{sec:bmrm}
@@ -661,10 +683,13 @@ $\sum_j\vartheta_ja_j=\one^{\!\top}\hat\alpha$, so for $t\to\infty$
 \min_{\vartheta\in\Delta^J}\ \tfrac12\,\hat\alpha^{\!\top}Q\hat\alpha-\one^{\!\top}\hat\alpha ,
 \]
 i.e.\ \emph{the SVM dual~\eqref{eq:dual} restricted to
-$\mathrm{conv}\{\alpha^1,\dots,\alpha^J\}\subseteq D$}. The method is therefore
-exactly Dantzig--Wolfe decomposition of~\eqref{eq:dual} with~\eqref{eq:kp} as pricing
-problem, and bundle, cutting planes on~\eqref{eq:hinge} and column generation
-on~\eqref{eq:dual} are three views of one algorithm. Two practical consequences:
+$\mathrm{conv}\{\alpha^1,\dots,\alpha^J\}\subseteq D$}. The method is therefore exactly \emph{Dantzig--Wolfe decomposition}
+of~\eqref{eq:dual}: the scheme that optimises over a polytope by keeping an inner
+approximation of it --- here $\mathrm{conv}\{\alpha^j\}$ --- and enlarging that
+approximation with points supplied by a cheap subproblem, called the \emph{pricing
+problem}, which here is~\eqref{eq:kp}. Generating those points one at a time is
+\emph{column generation}. Bundle on $\psi$, cutting planes on~\eqref{eq:hinge} and
+column generation on~\eqref{eq:dual} are thus three views of one algorithm. Two practical consequences:
 \begin{itemize}
 \item the master returns the primal solution $\hat\alpha\to\alpha^\star$, so nothing
       extra is needed to recover the classifier;
