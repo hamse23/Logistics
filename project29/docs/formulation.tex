@@ -509,9 +509,62 @@ on $v(\mathrm{D})$ rather than a bound on one's own objective only.
 \chapter{The Bundle Method}
 \label{ch:bundle}
 
-\section{Model and master problem}
-Because $-\tfrac12\|\lambda\|^2$ is known in closed form, we linearise only the
-polyhedral part --- a \emph{generalized} (structured) bundle method. Each oracle call
+\section{The cutting-plane model and the bundle}
+\label{sec:cpmodel}
+Nothing about $\psi$ is available in closed form. All an algorithm may do is call the
+oracle of Chapter~\ref{ch:dual} at a point $\lambda$ and receive two things: the
+value $\psi(\lambda)$ and one supergradient $g(\lambda)$ from~\eqref{eq:supergrad}.
+A bundle method is built on the observation that this is more information than it
+looks.
+
+Because $\psi$ is concave, a single oracle call yields a bound that is valid
+\emph{everywhere}, not just near $\lambda$:
+\[
+\psi(\mu)\ \le\ \ell_\lambda(\mu):=\psi(\lambda)+\inner{g(\lambda)}{\mu-\lambda}
+\qquad\forall\,\mu\in\Hs .
+\]
+Collecting these as the algorithm proceeds gives the \emph{bundle}
+$\mathcal B=\{(\lambda^h,\psi^h,g^h)\}$, and their pointwise minimum
+\[
+\psi_{\mathcal B}(\mu)=\min\bigl\{\ell_{\lambda^h}(\mu)\ :\ (\lambda^h,\psi^h,g^h)\in\mathcal B\bigr\}\ \ge\ \psi(\mu)
+\]
+is the \emph{cutting-plane model} of $\psi$: an upper approximation that improves
+wherever the oracle has been called. Maximising the model in place of $\psi$ is the
+\emph{master problem}, and unlike $\psi$ it can actually be solved, being a small
+linear or quadratic program.
+
+Taken bare this does not work: where few cuts have been placed the model is a gross
+over-estimate, so its maximiser can be arbitrarily far from anything yet explored,
+and the iterates oscillate. The fix is to stabilise. One keeps a \emph{stability
+centre} $\bar\lambda$ --- in practice the best point found so far --- and penalises
+displacement from it,
+\[
+\max_{\mu}\ \ \psi_{\mathcal B}(\mu)-\tfrac{1}{2t}\|\mu-\bar\lambda\|^2 ,
+\]
+where the \emph{proximal parameter} $t>0$ expresses how far from $\bar\lambda$ the
+model is trusted. (The course slides write this with a parameter $\mu=1/t$
+multiplying rather than dividing; the two conventions are reciprocal.) The
+stabilised master is always bounded above, so its solution is always well defined,
+which the unstabilised one need not be.
+
+Whether the model deserved that trust is then tested. If the true $\psi$ improves by
+at least a fixed fraction $\kappa\in(0,1)$ of the improvement the model predicted,
+the model is behaving and the centre moves to the new point --- a \emph{serious
+step}, after which $t$ may be increased to allow longer steps. Otherwise the centre
+stays and only the new cut is kept --- a \emph{null step}, after which $t$ is
+decreased. Either way the bundle has grown where the model was wrong, so a null step
+is progress too.
+
+\section{The structured master problem}
+\label{sec:master}
+We depart from the generic scheme of Section~\ref{sec:cpmodel} in one respect.
+Writing $\psi=\psi_{\mathrm{sm}}+\psi_{\mathrm{pl}}$ as in Chapter~\ref{ch:dual},
+the smooth part $\psi_{\mathrm{sm}}(\lambda)=-\tfrac12\|\lambda\|^2$ is known
+exactly, so there is nothing to be gained by approximating it with cuts and
+something to be lost, since a piecewise-linear model of a curved function is poor
+near its maximiser. We therefore linearise only $\psi_{\mathrm{pl}}$ and carry
+$\psi_{\mathrm{sm}}$ into the master unchanged --- a \emph{generalized}, or
+structured, bundle method. Each oracle call
 returns some $\alpha^j\in D$, which gives the affine upper model
 \[
 \psi_{\mathrm{pl}}(\lambda)\ \le\ c(\lambda)^{\!\top}\alpha^j
@@ -541,6 +594,31 @@ the $J\times J$ Gram matrix $G_{jl}=\inner{b_j}{b_l}$ and the vector
 $p_j=\inner{b_j}{\bar\lambda}$ are needed; both are maintained incrementally, so a
 master costs $O(J^2)$ plus one kernel product per new cut. We solve it with an
 off-the-shelf QP solver, which the project statement allows.
+
+Collecting the pieces, (A1) is the following procedure.
+\begin{quote}
+\begin{tabbing}
+xx\=xx\=xx\=xx\kill
+$\bar\lambda\leftarrow0$; call the oracle; $\mathcal B\leftarrow\{\alpha^1\}$\\
+\textbf{repeat}\\
+\>solve the master~\eqref{eq:masterdual} for $\vartheta$; set
+  $\lambda^{\mathrm{new}}$ and $\hat\alpha=\sum_j\vartheta_j\alpha^j$\\
+\>$\mathrm{lb}\leftarrow\max\{\mathrm{lb},\ \psi(\lambda^{\mathrm{new}})\}$;\quad
+  $\mathrm{ub}\leftarrow\tfrac12\hat\alpha^{\!\top}Q\hat\alpha-\one^{\!\top}\hat\alpha$\\
+\>\textbf{if} $\mathrm{ub}-\mathrm{lb}\le\varepsilon$ \textbf{then stop}\\
+\>\textbf{if} $\psi(\lambda^{\mathrm{new}})\ \ge\ \psi(\bar\lambda)
+  +\kappa\bigl[\text{model}(\lambda^{\mathrm{new}})-\psi(\bar\lambda)\bigr]$\\
+\>\>\textbf{then} $\bar\lambda\leftarrow\lambda^{\mathrm{new}}$; $t\leftarrow$ larger
+  \qquad\textit{(serious step)}\\
+\>\>\textbf{else} $t\leftarrow$ smaller \qquad\qquad\qquad\ \ \textit{(null step)}\\
+\>$\mathcal B\leftarrow\mathcal B\cup\{\alpha^{\mathrm{new}}\}$, pruning if it has
+  grown too large\\
+\textbf{until} done
+\end{tabbing}
+\end{quote}
+Note the stopping rule: rather than the usual test on the length of the step, we can
+stop on the \emph{certified gap} of Section~\ref{sec:dw}, which brackets
+$v(\mathrm{D})$ from both sides and is available at no extra cost.
 
 \section{Primal recovery and Dantzig--Wolfe}
 \label{sec:dw}
