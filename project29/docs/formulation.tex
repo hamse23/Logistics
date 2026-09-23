@@ -131,8 +131,8 @@ Eliminating $\xi$ gives the equivalent unconstrained, non-smooth form
 \min_{w,b}\ \tfrac12\|w\|^2 + C\sum_{i=1}^m\bigl[1-y_i(\inner{w}{\phi_i}+b)\bigr]^+ ,
 \qquad [t]^+:=\max\{0,t\},
 \end{equation}
-which is the form in which the SVM appears in the course material as the motivating
-example for nondifferentiable optimization. We shall meet it again, unexpectedly, in
+which is the form in which the SVM appears in the course material \cite{CMslides} as
+the motivating example for nondifferentiable optimization. We shall meet it again, unexpectedly, in
 Section~\ref{sec:whatitis}.
 
 \section{Dual formulation}
@@ -429,8 +429,8 @@ device: Section~\ref{sec:whatitis} shows that it is the SVM bias $b$.
 
 The same structure --- relax a single equality, obtain a separable problem whose
 solution is piecewise linear in the multiplier with one breakpoint per variable ---
-appears as a worked exercise in the course material for the projection onto a
-hyperplane, and (KP) is its bounded-variable analogue.
+appears as a worked exercise in the course material \cite{CMslides} for the
+projection onto a hyperplane, and (KP) is its bounded-variable analogue.
 
 \section{Properties of the dual function}
 \begin{proposition}[finiteness]
@@ -508,7 +508,7 @@ twice recovers it --- so the next section says what is nevertheless gained.
 \section{Relation to the direct nonsmooth formulation}
 \label{sec:bmrm}
 The SVM appears in the course material on nondifferentiable unconstrained
-optimization as the motivating example, in the form
+optimization \cite{CMslides} as the motivating example, in the form
 \[
 \min_{w,b}\ \ \|w\|^2+C\sum_{i\in I}\max\bigl\{1-y_i(\inner{w}{x_i}-b),\,0\bigr\},
 \]
@@ -516,8 +516,7 @@ whose nondifferentiability is precisely what motivates bundle methods. Since
 Section~\ref{sec:whatitis} shows that $\max_\lambda\psi$ is that same function, we
 must say clearly what dualising the representer identity adds over simply running a
 bundle method on it --- which is also what the published cutting-plane methods for
-regularised risk minimisation do (Joachims 2006; Teo et al.\ 2010; Franc \&
-Sonnenburg 2008).
+regularised risk minimisation do \cite{Joachims06,Teo10,Franc08}.
 
 The answer is \emph{not} that the bias makes a direct approach impossible: $f(w,b)$
 is convex in $(w,b)$ jointly and a subgradient in both variables is immediate, so one
@@ -546,7 +545,11 @@ Nothing about $\psi$ is available in closed form. All an algorithm may do is cal
 oracle of Chapter~\ref{ch:dual} at a point $\lambda$ and receive two things: the
 value $\psi(\lambda)$ and one supergradient $g(\lambda)$ from~\eqref{eq:supergrad}.
 A bundle method is built on the observation that this is more information than it
-looks.
+looks. The development in this section is the standard one \cite{Kelley60,HUL93,Frangioni20},
+as presented in the course material \cite{CMslides}; we restate it because (A1) is
+an instance of it, and because our setting is concave maximisation rather than
+convex minimisation, so every inequality is reversed and subgradients become
+supergradients. Section~\ref{sec:master} then departs from it.
 
 Because $\psi$ is concave, a single oracle call yields a bound that is valid
 \emph{everywhere}, not just near $\lambda$:
@@ -596,7 +599,7 @@ displacement from it,
 \max_{\mu}\ \ \psi_{\mathcal B}(\mu)-\tfrac{1}{2t}\|\mu-\bar\lambda\|^2 ,
 \]
 where the \emph{proximal parameter} $t>0$ expresses how far from $\bar\lambda$ the
-model is trusted. (The course slides write this with a parameter $\mu=1/t$
+model is trusted. (The course material \cite{CMslides} writes this with a parameter $\mu=1/t$
 multiplying rather than dividing; the two conventions are reciprocal.) The
 stabilised master is always bounded above, so its solution is always well defined,
 which the unstabilised one need not be.
@@ -686,7 +689,7 @@ $\sum_j\vartheta_ja_j=\one^{\!\top}\hat\alpha$, so for $t\to\infty$
 \min_{\vartheta\in\Delta^J}\ \tfrac12\,\hat\alpha^{\!\top}Q\hat\alpha-\one^{\!\top}\hat\alpha ,
 \]
 i.e.\ \emph{the SVM dual~\eqref{eq:dual} restricted to
-$\mathrm{conv}\{\alpha^1,\dots,\alpha^J\}\subseteq D$}. The method is therefore exactly \emph{Dantzig--Wolfe decomposition}
+$\mathrm{conv}\{\alpha^1,\dots,\alpha^J\}\subseteq D$}. The method is therefore exactly \emph{Dantzig--Wolfe decomposition} \cite{DW60}
 of~\eqref{eq:dual}: the scheme that optimises over a polytope by keeping an inner
 approximation of it --- here $\mathrm{conv}\{\alpha^j\}$ --- and enlarging that
 approximation with points supplied by a cheap subproblem, called the \emph{pricing
@@ -758,7 +761,8 @@ y^k_i=\begin{cases}+1,&c_i=k\\ -1,&c_i\neq k\end{cases}
 \]
 and solve~\eqref{eq:primal}/\eqref{eq:dual} with $y=y^k$, obtaining
 $f^k(x)=\sum_i\alpha^k_iy^k_i\kappa(x_i,x)+b^k$. A new point is assigned to
-$\argmax_k f^k(x)$. It constructs $q$ models, against $q(q-1)/2$ for One-vs-One.
+$\argmax_k f^k(x)$. It constructs $q$ models, against $q(q-1)/2$ for One-vs-One; see \cite{HsuLin02}
+for a comparison of the two.
 
 Three observations matter for what follows:
 \begin{enumerate}
@@ -946,5 +950,47 @@ curved term in closed form in the master. And~\eqref{eq:budget} changes the mode
 (M), so any comparison against One-vs-Rest would confound a modelling change with an
 algorithmic one, whereas Chapter~\ref{ch:dual} leaves (M) exactly the standard
 One-vs-Rest SVM and changes only how it is solved.
+
+\begin{thebibliography}{99}
+
+\bibitem{CMslides} A. Frangioni. \emph{Computational Mathematics for Learning and
+Data Analysis}, course material, University of Pisa. (Decks on nondifferentiable
+unconstrained optimization and on constrained optimization.)
+
+\bibitem{Frangioni20} A. Frangioni. Standard Bundle Methods: Untrusted Models and
+Duality. In \emph{Numerical Nonsmooth Optimization: State of the Art Algorithms},
+A.M. Bagirov, M. Gaudioso, N. Karmitsa, M. M\"akel\"a, S. Taheri (Eds.), 61--116,
+Springer, 2020.
+
+\bibitem{HUL93} J.-B. Hiriart-Urruty, C. Lemar\'echal. \emph{Convex Analysis and
+Minimization Algorithms I--II}. Springer-Verlag, 1993.
+
+\bibitem{Kelley60} J.E. Kelley. The cutting-plane method for solving convex
+programs. \emph{Journal of the SIAM} 8(4):703--712, 1960.
+
+\bibitem{DW60} G.B. Dantzig, P. Wolfe. Decomposition principle for linear programs.
+\emph{Operations Research} 8(1):101--111, 1960.
+
+\bibitem{Bubeck15} S. Bubeck. \emph{Convex Optimization: Algorithms and Complexity}.
+arXiv:1405.4980v2, 2015.
+
+\bibitem{CortesVapnik95} C. Cortes, V. Vapnik. Support-vector networks.
+\emph{Machine Learning} 20(3):273--297, 1995.
+
+\bibitem{HsuLin02} C.-W. Hsu, C.-J. Lin. A comparison of methods for multi-class
+support vector machines. \emph{IEEE Transactions on Neural Networks}
+13(2):415--425, 2002.
+
+\bibitem{Joachims06} T. Joachims. Training linear SVMs in linear time. In
+\emph{Proceedings of KDD}, 2006.
+
+\bibitem{Teo10} C.H. Teo, S.V.N. Vishwanathan, A. Smola, Q.V. Le. Bundle methods for
+regularized risk minimization. \emph{Journal of Machine Learning Research}
+11:311--365, 2010.
+
+\bibitem{Franc08} V. Franc, S. Sonnenburg. Optimized cutting plane algorithm for
+support vector machines. In \emph{Proceedings of ICML}, 2008.
+
+\end{thebibliography}
 
 \end{document}
