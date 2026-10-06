@@ -71,11 +71,11 @@ formulation of the SVM. We reintroduce the weight vector $w$ as an explicit
 variable, so that the representer identity $w=\sum_i\alpha_iy_i\phi(x_i)$ becomes a
 constraint of the problem, and we dualise \emph{that} identity. The resulting
 Lagrangian relaxation is a linear program over a box with a single equality
-constraint --- a continuous knapsack, solved exactly by sorting in $O(m\log m)$ ---
-so the dual function is finite everywhere, genuinely non-differentiable, and defined
-on a space of dimension $n$ for a linear kernel or $m$ in general. It is maximised by
-a proximal bundle method, whose master problem is solved by an off-the-shelf QP
-solver, as the project statement allows.
+constraint. This is a continuous knapsack, which a sort solves in $O(m\log m)$. The
+dual function is then finite everywhere and non-differentiable, and it lives in a
+space of dimension $n$ for a linear kernel, or $m$ in general. We maximise it with a
+proximal bundle method. Its master problem is handed to an off-the-shelf QP solver,
+which the project statement allows.
 
 The second optimization algorithm (A2) is a general-purpose convex QP solver applied
 to the standard SVM dual. No off-the-shelf solver is used elsewhere, save for the
@@ -90,7 +90,7 @@ solutions that help in solving the others.
 \label{ch:svm}
 
 \paragraph{Notation.} Throughout, $\inner{a}{b}$ denotes the \emph{inner product}
-(the scalar product) of two elements of the feature space $\Hs$ --- a single real
+(the scalar product) of two elements of the feature space $\Hs$, a single real
 number, $\sum_i a_ib_i$ in the finite-dimensional case. We write it this way rather
 than $a^{\!\top}b$ because $\Hs$ may be infinite-dimensional, as it is for the
 Gaussian kernel, so there is no finite column of coordinates to transpose; $a^{\!\top}b$
@@ -163,12 +163,12 @@ the \emph{representer identity}, the same statement as the representer theorem o
 kernel methods, and it is what makes kernels usable at all: however large the
 dimension of $\Hs$, the optimal $w$ is described by $m$ numbers.
 
-It is also, as we are about to see, where $Q$ comes from. Substituting it into
-$\tfrac12\|w\|^2$ turns a squared norm into
-$\tfrac12\sum_{i,j}\alpha_i\alpha_jy_iy_j\kappa(x_i,x_j)=\tfrac12\alpha^{\!\top}Q\alpha$:
-before the substitution there is no $Q$ anywhere in the problem, and after it there
-is a dense $m\times m$ matrix. The dense Hessian of~\eqref{eq:dual} is therefore not
-intrinsic to the SVM; it is the price of eliminating $w$.
+It is also where $Q$ comes from. Substituting it into $\tfrac12\|w\|^2$ turns a
+squared norm into
+$\tfrac12\sum_{i,j}\alpha_i\alpha_jy_iy_j\kappa(x_i,x_j)=\tfrac12\alpha^{\!\top}Q\alpha$.
+Before the substitution there is no $Q$ anywhere in the problem. After it there is a
+dense $m\times m$ matrix. So the dense Hessian of~\eqref{eq:dual} is not intrinsic to
+the SVM. It is the price of eliminating $w$.
 
 Substituting the three conditions back into $L$ makes every term collapse. Writing
 $K_{ij}=\kappa(x_i,x_j)$, $Y=\operatorname{diag}(y)$ and $Q=YKY$:
@@ -201,9 +201,9 @@ is the convex QP
 \qquad\text{s.t.}\qquad \alpha\in D:=\bigl\{\alpha:\ y^{\!\top}\alpha=0,\ \ 0\le\alpha\le C\one\bigr\}.
 \end{equation}
 $D$ is a non-empty ($0\in D$) compact polytope and $Q\succeq0$, so~\eqref{eq:dual}
-always has a solution. Slater's condition holds for~\eqref{eq:primal} --- there is a strictly feasible
-point, obtained by taking $\xi$ large enough --- hence there is no duality gap, that
-is, primal and dual optima coincide and the KKT conditions
+always has a solution. Slater's condition holds for~\eqref{eq:primal}, since taking $\xi$ large enough gives
+a strictly feasible point. There is therefore no duality gap: primal and dual optima
+coincide and the KKT conditions
 \begin{equation}
 \label{eq:kkt}
 \begin{aligned}
@@ -230,10 +230,10 @@ feasibility of the margin constraint together with complementarity on $\xi_i\ge0
 (note the factor $y_i$ inside: $\xi_i$ measures the violation of \emph{the sample's
 own} margin, not of the hyperplane equation).
 
-The bias $b^\star$ deserves more care. The textbook recipe reads $b^\star$ off any
-free support vector via~\eqref{eq:kkt} and averages over them for stability; but the
-average is only as good as the set of indices identified as free, so a solver that
-is merely close to optimal produces a $b$ that degrades the measured primal--dual
+The bias $b^\star$ needs more care. The textbook recipe reads it off any free support
+vector via~\eqref{eq:kkt}, averaging over them for stability. But the average is only
+as good as the set of indices identified as free, so a solver that is close to
+optimal rather than at it produces a $b$ that spoils the measured primal--dual
 gap. The better observation is that $b$ enters the Lagrangian only through
 $-b\sum_i\alpha_iy_i$, so \emph{$b$ is the multiplier of the equality constraint
 $y^{\!\top}\alpha=0$}. Any algorithm that produces that multiplier explicitly can use
@@ -271,19 +271,19 @@ $\lambda$. We call the minimisation on the right \emph{the relaxed problem}.
 
 Solving it for one value of $\lambda$ is what is meant, here and throughout, by a
 call to the \emph{oracle}: a routine that is handed a point $\lambda$ and returns the
-value $\psi(\lambda)$ together with one \emph{supergradient} of $\psi$ there --- a
-vector $g$ such that
+value $\psi(\lambda)$ together with one \emph{supergradient} of $\psi$ there, that
+is a vector $g$ for which
 \[
 \psi(\mu)\ \le\ \psi(\lambda)+\inner{g}{\mu-\lambda}\qquad\forall\,\mu ,
 \]
-which is the concave counterpart of a subgradient. Where $\psi$ is differentiable the
-gradient is the only such $g$; at a kink there are many, and that multiplicity is
-exactly what makes nondifferentiable optimization harder. Chapter~\ref{ch:bundle}
-is built on this inequality and Figure~\ref{fig:cp} illustrates it. The name is
-standard and the idea behind it is that the algorithm neither knows nor needs to know
-how the answer is produced --- $\psi$ has no closed form, cannot be differentiated
-symbolically and cannot be inspected, so probing it point by point is the only thing
-available. Everything in Chapter~\ref{ch:bundle} is built around that restriction,
+This is the concave counterpart of a subgradient. Where $\psi$ is differentiable the
+gradient is the only such $g$. At a kink there are many, and it is that multiplicity
+which makes nondifferentiable optimization hard. Chapter~\ref{ch:bundle} is built on
+this inequality, and Figure~\ref{fig:cp} illustrates it.
+
+The name is the standard one. The algorithm neither knows nor needs to know how the
+value is produced: $\psi$ has no closed form, cannot be differentiated symbolically
+and cannot be inspected, so probing it point by point is all that is available. Everything in Chapter~\ref{ch:bundle} is built around that restriction,
 and the oracle call is consequently the unit in which we measure work: for the
 relaxation of this chapter one call costs a single kernel product and a sort, and
 the iteration counts reported in Chapter~\ref{ch:exp} are counts of oracle calls. Three things follow, and they
@@ -310,7 +310,7 @@ Section~\ref{sec:knapsack} that one non-obvious candidate is exactly the right o
 For a Lagrangian dual approach to be worth building, the relaxation must satisfy:
 \begin{description}
 \item[(R1)] the relaxed problem must be \emph{substantially easier} than the
-  original --- ideally closed-form or combinatorial;
+  original, ideally closed-form or combinatorial;
 \item[(R2)] the dual must be \emph{multi-dimensional}, otherwise a one-dimensional
   search solves it and bundle machinery is pointless;
 \item[(R3)] the dual should be \emph{genuinely non-differentiable}, otherwise a
@@ -328,33 +328,31 @@ dual function
 Since $y^{\!\top}\alpha=0$ is what remained of stationarity in $b$, dropping it
 removes the bias from the model: \eqref{eq:badrelax} is the bias-free SVM with a
 linear term $\theta\,y^{\!\top}\alpha$ pricing the class imbalance, and choosing
-$\theta$ amounts to choosing how hard to push the solution towards balance. It is an
-entirely natural thing to try, and it fails all three tests at once:
+$\theta$ amounts to choosing how hard to push the solution towards balance. It is a
+natural thing to try. It fails all three tests at once:
 \begin{itemize}
 \item \textbf{(R1)} the minimisation in~\eqref{eq:badrelax} is still a QP with the
       \emph{same dense Hessian} $Q$. A single scalar constraint has been removed and
       the whole difficulty left in place;
 \item \textbf{(R2)} $\theta$ is one number, so the Lagrangian dual is univariate and
-      a bisection solves it in a handful of evaluations --- there is nothing for a
+      a bisection solves it in a handful of evaluations, leaving nothing for a
       bundle method to do;
-\item \textbf{(R3)} worse, when $Q\succ0$ --- which is the typical case for a
-      Gaussian kernel --- the minimiser of~\eqref{eq:badrelax} is unique, hence
-      $\psi\in C^1$ and the dual is smooth, so even a nonsmooth method would be the
-      wrong tool.
+\item \textbf{(R3)} worse still, when $Q\succ0$, the typical case for a Gaussian
+      kernel, the minimiser of~\eqref{eq:badrelax} is unique. Then $\psi\in C^1$ and
+      the dual is smooth, so even a nonsmooth method would be the wrong tool.
 \end{itemize}
 Relaxing the box $\alpha\le C\one$ instead fares no better: the relaxation is again a
 QP in $Q$, and now with $m$ multipliers but no easier a subproblem.
 
-The reason is structural: in~\eqref{eq:dual} \emph{no constraint is the difficulty}.
-The difficulty is $Q$ itself, a dense $m\times m$ matrix. So the object to dualise is
-not a constraint of~\eqref{eq:dual} at all --- it is the identity that \emph{created}
-$Q$.
+The reason is structural. In~\eqref{eq:dual} no constraint is the difficulty. The
+difficulty is $Q$ itself, a dense $m\times m$ matrix. So the object to dualise is not
+a constraint of~\eqref{eq:dual} at all. It is the identity that created $Q$.
 
 \section[Putting $w$ back]{Putting $w$ back: dualising the representer identity}
 $Q$ appears in~\eqref{eq:dual} only because $w$ was eliminated through the
 representer identity~\eqref{eq:representer}. In the standard derivation that identity
 is used as a \emph{substitution}: a fact about the optimum, exploited to remove a
-variable. A substitution cannot be dualised --- but a constraint can. So we put $w$
+variable. A substitution cannot be dualised, but a constraint can. So we put $w$
 back as an independent variable and \emph{impose} the identity instead of using it:
 \begin{equation}
 \label{eq:split}
@@ -372,10 +370,9 @@ L(\alpha,w;\lambda)=\tfrac12\|w\|^2-\one^{\!\top}\alpha
 +\Bigl\langle \lambda,\ w-\sum_i\alpha_iy_i\phi_i \Bigr\rangle .
 \]
 The point of doing this is that $w$ and $\alpha$ are now \emph{untied}. They are two
-descriptions of the same hyperplane, and~\eqref{eq:split} forces them to agree;
-relaxing that constraint lets them disagree and charges a price $\lambda$ for the
-disagreement, so that each may be optimised in whichever form suits it. The two
-groups of variables therefore separate. Minimising over $w\in\Hs$ is unconstrained
+descriptions of the same hyperplane, and~\eqref{eq:split} forces them to agree.
+Relaxing that constraint lets them disagree, at a price $\lambda$, so each can be
+optimised in whichever form suits it. The two groups of variables then separate. Minimising over $w\in\Hs$ is unconstrained
 and gives $w(\lambda)=-\lambda$ with value $-\tfrac12\|\lambda\|^2$; what remains is
 \emph{linear} in $\alpha$ over $D$, because $\alpha$ now appears only linearly. The
 matrix $Q$ never forms: it existed only because $w$ and $\alpha$ were the same
@@ -392,13 +389,12 @@ c_i(\lambda)=-\bigl(1+y_i\inner{\lambda}{\phi_i}\bigr),
 and the Lagrangian dual of~\eqref{eq:split} is $\max_{\lambda\in\Hs}\psi(\lambda)$.
 
 In the vocabulary of partial Lagrangian relaxation, the representer identity is the
-\emph{complicating} constraint --- it is what couples $w$ to $\alpha$ and so what
-creates the dense $Q$ --- while $\alpha\in D$ are the \emph{easy} constraints, kept
-in the relaxed problem because they are exactly what makes it a knapsack. The usual
-warning that $\psi(\lambda)$ may be $-\infty$ for some $\lambda$, and that one then
-has to neutralise the offending directions of zero curvature, does not apply here:
-$D$ is compact, so the relaxed problem always has a finite optimum and $\psi$ is
-finite on all of $\Hs$.
+\emph{complicating} constraint, since it couples $w$ to $\alpha$ and so creates the
+dense $Q$. The constraints $\alpha\in D$ are the \emph{easy} ones, kept in the relaxed
+problem because they are what makes it a knapsack. The usual warning that
+$\psi(\lambda)$ may be $-\infty$ for some $\lambda$, so that the offending directions
+of zero curvature have to be neutralised, does not apply here. $D$ is compact, so the
+relaxed problem always has a finite optimum and $\psi$ is finite on all of $\Hs$.
 
 \section{The relaxed problem is a continuous knapsack}
 \label{sec:knapsack}
@@ -411,11 +407,11 @@ in $\alpha$:
 \min\ c^{\!\top}\alpha \qquad\text{s.t.}\qquad y^{\!\top}\alpha=0,\quad 0\le\alpha\le C\one,
 \end{equation}
 a linear objective, box bounds, and \emph{exactly one} further linear constraint.
-That is the defining shape of the classical \emph{continuous knapsack} problem ---
-continuous, or fractional, because each $\alpha_i$ may take any value in $[0,C]$,
-where the $0/1$ knapsack would have to take an item whole. It is worth a name
-because it is one of the problems that can be solved exactly by sorting, with no
-linear programming solver involved. Relaxing that one equality with a scalar $\theta$
+That is the defining shape of the classical \emph{continuous knapsack} problem. It is
+called continuous, or fractional, because each $\alpha_i$ may take any value in
+$[0,C]$, where the $0/1$ knapsack has to take an item whole. The name matters because
+such problems can be solved exactly by sorting, with no linear programming solver
+involved. Relaxing that one equality with a scalar $\theta$
 makes the box minimiser explicit,
 \[
 \alpha_i(\theta)=\begin{cases}
@@ -430,23 +426,23 @@ scanning (or by median search in $O(m)$ expected time). Splitting the tied compo
 to make the equality hold exactly produces an $\alpha$ that minimises the Lagrangian
 of~\eqref{eq:kp} \emph{and} is feasible, hence optimal. Forming $c$ costs one kernel
 product; the rest costs $O(m\log m)$. This settles (R1): a dense QP has been replaced
-by a sort. The scalar $\theta$ introduced here to solve~\eqref{eq:kp} is not merely a
-device: Section~\ref{sec:whatitis} shows that it is the SVM bias $b$.
+by a sort. The scalar $\theta$ introduced here to solve~\eqref{eq:kp} is not just a
+device. Section~\ref{sec:whatitis} shows that it is the SVM bias $b$.
 
-The same structure --- relax a single equality, obtain a separable problem whose
-solution is piecewise linear in the multiplier with one breakpoint per variable ---
-appears as a worked exercise in the course material \cite{CMslides} for the
+The same structure appears in the course material: relax a single equality, and the
+problem becomes separable, with a solution piecewise linear in the multiplier and one
+breakpoint per variable. It appears there as a worked exercise in the course material \cite{CMslides} for the
 projection onto a hyperplane, and (KP) is its bounded-variable analogue.
 
 \section{Properties of the dual function}
 \begin{proposition}[finiteness]
 $D$ is a non-empty compact polytope, so the minimum in~\eqref{eq:psi} is attained and
 finite for every $\lambda$. Hence $\psi:\Hs\to\R$ is finite everywhere and concave
-(and upper semicontinuous, so that it does not jump upwards in the limit --- the
-regularity a maximisation needs for its optimum to be attained).
+(and upper semicontinuous, so that it does not jump upwards in the limit, which is
+the regularity a maximisation needs for its optimum to be attained).
 \end{proposition}
-This is unusually convenient: no feasibility (``infinite'') cuts are ever needed, and
-every oracle call returns a valid lower bound on the optimal value.
+This is convenient. No feasibility (``infinite'') cuts are ever needed, and every
+oracle call returns a valid lower bound on the optimal value.
 
 \begin{proposition}[structure and non-differentiability]
 Write
@@ -465,20 +461,20 @@ many pieces. $\psi$ fails to be differentiable exactly where
 $c_i-\theta^\star y_i=0$.
 \end{proposition}
 Unwinding that condition with $w=-\lambda$ gives
-$y_i\inner{w}{\phi_i}+\theta^{\star}y_i=1$: the kinks of $\psi$ sit \emph{exactly} on
-the support-vector condition $y_if(x_i)=1$ of~\eqref{eq:kkt}. Since any
-non-degenerate SVM has free support vectors, the maximiser of $\psi$ \emph{is} a
-point of non-differentiability. This settles (R3): the non-smoothness is not
-incidental, it is the solution.
+$y_i\inner{w}{\phi_i}+\theta^{\star}y_i=1$. So the kinks of $\psi$ sit on the
+support-vector condition $y_if(x_i)=1$ of~\eqref{eq:kkt}. Any non-degenerate SVM has
+free support vectors, so the maximiser of $\psi$ is itself a point of
+non-differentiability. This settles (R3). The non-smoothness is not incidental: it is
+where the solution lives.
 
 \begin{proposition}[no duality gap]
 \eqref{eq:split} is convex, its coupling constraint is affine and $D$ is compact;
 therefore $\max_\lambda\psi(\lambda)=v(\mathrm{D}')=v(\mathrm{D})$, and the maximiser
 is $\lambda^\star=-w^\star$.
 \end{proposition}
-The multiplier of the relaxed identity is thus, up to sign, the primal weight vector
-itself, and the bundle method's task can be read as finding the price at which $w$
-and $\alpha$ agree again. A supergradient of $\psi$ at $\lambda$ is the violation of the relaxed
+So the multiplier of the relaxed identity is, up to sign, the primal weight vector
+itself, and the bundle method's task is to find the price at which $w$ and $\alpha$
+agree again. A supergradient of $\psi$ at $\lambda$ is the violation of the relaxed
 constraint,
 \begin{equation}
 \label{eq:supergrad}
@@ -507,9 +503,11 @@ $\theta$ gives, by LP duality,
 \end{equation}
 So the Lagrangian dual of~\eqref{eq:split} is the hinge-loss
 primal~\eqref{eq:hinge}, and \emph{the multiplier $\theta$ of the knapsack equality
-is the SVM bias $b$} --- so $b$ falls out of the oracle for free. That the dual of the dual returns the primal is not an accident of this problem
---- it is the general fact that taking the conjugate of a closed convex function
-twice recovers it --- so the next section says what is nevertheless gained.
+is the SVM bias $b$}, so $b$ falls out of the oracle for free.
+
+That the dual of the dual returns the primal is not an accident of this problem. It
+is the general fact that taking the conjugate of a closed convex function twice
+recovers it. The next section says what is nevertheless gained.
 
 \section{Relation to the direct nonsmooth formulation}
 \label{sec:bmrm}
@@ -521,18 +519,18 @@ optimization \cite{CMslides} as the motivating example, in the form
 whose nondifferentiability is precisely what motivates bundle methods. Since
 Section~\ref{sec:whatitis} shows that $\max_\lambda\psi$ is that same function, we
 must say clearly what dualising the representer identity adds over simply running a
-bundle method on it --- which is also what the published cutting-plane methods for
+bundle method on it, which is what the published cutting-plane methods for
 regularised risk minimisation do \cite{Joachims06,Teo10,Franc08}.
 
-The answer is \emph{not} that the bias makes a direct approach impossible: $f(w,b)$
-is convex in $(w,b)$ jointly and a subgradient in both variables is immediate, so one
-can perfectly well put $b$ in the bundle. The answer is that our relaxation minimises
-over $b$ \emph{exactly}, at every oracle call, instead of approximating the $b$
-direction with cutting planes. The knapsack multiplier $\theta$
-of~\eqref{eq:theta_is_b} \emph{is} that exact partial minimisation, and the sort of
-Section~\ref{sec:knapsack} is how it is computed. Equivalently: we bundle
-$g(w)=\min_b f(w,b)$ rather than $f(w,b)$, and $g$ is the better-conditioned object
-because one of its directions has been eliminated in closed form. The measured effect
+It is not that the bias makes a direct approach impossible. $f(w,b)$ is convex in
+$(w,b)$ jointly and a subgradient in both variables is immediate, so $b$ can simply
+go in the bundle. The gain is that our relaxation minimises over $b$ \emph{exactly}
+at every oracle call, instead of approximating the $b$ direction with cutting
+planes. The knapsack multiplier $\theta$
+of~\eqref{eq:theta_is_b} is that partial minimisation, and the sort of
+Section~\ref{sec:knapsack} is how it is computed. Put another way, we bundle
+$g(w)=\min_b f(w,b)$ rather than $f(w,b)$, and $g$ is the better-conditioned object,
+one of its directions having been eliminated in closed form. The measured effect
 is reported in Section~\ref{sec:exp-baseline}.
 
 We claim exactly this much: the family of cuts and the function being optimised are
@@ -587,19 +585,18 @@ only place the maximum can be.}
 \label{fig:cp}
 \end{figure}
 
-Two things in the figure are worth stating explicitly, because the whole method
-rests on them. First, the bound is global: a single call constrains $\psi$ at every
-point of $\Hs$, which is why first-order information about a concave function is far
-more useful than it looks. Second, the model is an \emph{upper} approximation, so
-$\max_\mu\psi_{\mathcal B}(\mu)\ \ge\ \psi^\star$ --- maximising something one can
-actually solve yields a bound on the quantity one cannot. Maximising the model in place of $\psi$ is the
+Two things in the figure carry the whole method. First, the bound is global. A single
+call constrains $\psi$ at every point of $\Hs$, which is why first-order information
+about a concave function is more useful than it looks. Second, the model lies
+\emph{above} $\psi$, so $\max_\mu\psi_{\mathcal B}(\mu)\ \ge\ \psi^\star$. Maximising
+something we can solve bounds the quantity we cannot. Maximising the model in place of $\psi$ is the
 \emph{master problem}, and unlike $\psi$ it can actually be solved, being a small
 linear or quadratic program.
 
-Taken bare this does not work: where few cuts have been placed the model is a gross
+Taken bare this does not work. Where few cuts have been placed the model is a gross
 over-estimate, so its maximiser can be arbitrarily far from anything yet explored,
-and the iterates oscillate. The fix is to stabilise. One keeps a \emph{stability
-centre} $\bar\lambda$ --- in practice the best point found so far --- and penalises
+and the iterates oscillate. The fix is to stabilise. We keep a \emph{stability
+centre} $\bar\lambda$, in practice the best point found so far, and penalise
 displacement from it,
 \[
 \max_{\mu}\ \ \psi_{\mathcal B}(\mu)-\tfrac{1}{2t}\|\mu-\bar\lambda\|^2 ,
@@ -612,22 +609,21 @@ which the unstabilised one need not be.
 
 Whether the model deserved that trust is then tested. If the true $\psi$ improves by
 at least a fixed fraction $\kappa\in(0,1)$ of the improvement the model predicted,
-the model is behaving and the centre moves to the new point --- a \emph{serious
+the model is behaving and the centre moves to the new point. This is a \emph{serious
 step}, after which $t$ may be increased to allow longer steps. Otherwise the centre
-stays and only the new cut is kept --- a \emph{null step}, after which $t$ is
-decreased. Either way the bundle has grown where the model was wrong, so a null step
-is progress too.
+stays and only the new cut is kept, a \emph{null step}, after which $t$ is decreased.
+Either way the bundle has grown where the model was wrong, so a null step is progress
+too.
 
 \section{The structured master problem}
 \label{sec:master}
 We depart from the generic scheme of Section~\ref{sec:cpmodel} in one respect.
 Writing $\psi=\psi_{\mathrm{sm}}+\psi_{\mathrm{pl}}$ as in Chapter~\ref{ch:dual},
-the smooth part $\psi_{\mathrm{sm}}(\lambda)=-\tfrac12\|\lambda\|^2$ is known
-exactly, so there is nothing to be gained by approximating it with cuts and
-something to be lost, since a piecewise-linear model of a curved function is poor
-near its maximiser. We therefore linearise only $\psi_{\mathrm{pl}}$ and carry
-$\psi_{\mathrm{sm}}$ into the master unchanged --- a \emph{generalized}, or
-structured, bundle method. Each oracle call
+the smooth part $\psi_{\mathrm{sm}}(\lambda)=-\tfrac12\|\lambda\|^2$ is known in
+closed form. Approximating it with cuts gains nothing and loses something, because a
+piecewise-linear model of a curved function is poor near its maximiser. We therefore
+linearise only $\psi_{\mathrm{pl}}$ and carry $\psi_{\mathrm{sm}}$ into the master
+unchanged. This is a \emph{generalized}, or structured, bundle method. Each oracle call
 returns some $\alpha^j\in D$, which gives the affine upper model
 \[
 \psi_{\mathrm{pl}}(\lambda)\ \le\ c(\lambda)^{\!\top}\alpha^j
@@ -687,7 +683,7 @@ $v(\mathrm{D})$ from both sides and is available at no extra cost.
 \label{sec:dw}
 Let $\hat\alpha:=\sum_j\vartheta_j\alpha^j$ be the \emph{aggregated solution} built
 from the master problem's dual multipliers. Since $\vartheta\in\Delta^J$ and $D$ is
-convex, $\hat\alpha\in D$ --- it is a \emph{feasible} solution of~\eqref{eq:dual} at
+convex, $\hat\alpha\in D$: it is a \emph{feasible} solution of~\eqref{eq:dual} at
 every iteration. Moreover $\sum_j\vartheta_jb_j=\Phi^{\!\top}Y\hat\alpha$ and
 $\sum_j\vartheta_ja_j=\one^{\!\top}\hat\alpha$, so for $t\to\infty$
 \eqref{eq:masterdual} becomes
@@ -697,7 +693,7 @@ $\sum_j\vartheta_ja_j=\one^{\!\top}\hat\alpha$, so for $t\to\infty$
 i.e.\ \emph{the SVM dual~\eqref{eq:dual} restricted to
 $\mathrm{conv}\{\alpha^1,\dots,\alpha^J\}\subseteq D$}. The method is therefore exactly \emph{Dantzig--Wolfe decomposition} \cite{DW60}
 of~\eqref{eq:dual}: the scheme that optimises over a polytope by keeping an inner
-approximation of it --- here $\mathrm{conv}\{\alpha^j\}$ --- and enlarging that
+approximation of it, here $\mathrm{conv}\{\alpha^j\}$, and enlarging that
 approximation with points supplied by a cheap subproblem, called the \emph{pricing
 problem}, which here is~\eqref{eq:kp}. Generating those points one at a time is
 \emph{column generation}. Bundle on $\psi$, cutting planes on~\eqref{eq:hinge} and
@@ -707,7 +703,7 @@ column generation on~\eqref{eq:dual} are thus three views of one algorithm. Two 
       extra is needed to recover the classifier;
 \item $\psi(\lambda)\le v(\mathrm{D})\le
       \tfrac12\hat\alpha^{\!\top}Q\hat\alpha-\one^{\!\top}\hat\alpha$ at \emph{every}
-      iteration, a \textbf{certified gap} --- which decomposition algorithms for the
+      iteration, a \textbf{certified gap}, which decomposition algorithms for the
       SVM such as SMO do not provide.
 \end{itemize}
 
@@ -735,7 +731,7 @@ every \emph{free} support vector $0<\alpha^\star_i<C$ must be produced by mixing
 vertices that disagree on $i$. We therefore expect, and measure in
 Section~\ref{sec:exp-cuts}, that the number of cuts the method needs is governed by
 the number of free support vectors, and that truncating the bundle below that number
-makes the gap stall --- the classical Dantzig--Wolfe tailing-off.
+makes the gap stall, the classical Dantzig--Wolfe tailing-off.
 
 %% ------------------------------------------------------------------ chapter 5
 \chapter{The General-Purpose Solver}
@@ -750,9 +746,8 @@ H=Q,\qquad f=-\one,\qquad A_{\mathrm{eq}}=y^{\!\top},\qquad b_{\mathrm{eq}}=0,
 \qquad l=0,\qquad u=C\one ,
 \]
 and the bias is read off as the multiplier of the single equality row, exactly as in
-Section~\ref{sec:recovery}. This is the reference both for solution quality --- we
-verify that (A1) and (A2) return the same $\alpha^\star$, $b$ and test accuracy ---
-and for running time.
+Section~\ref{sec:recovery}. This is our reference for solution quality, since we verify that (A1) and (A2) return
+the same $\alpha^\star$, $b$ and test accuracy, and also for running time.
 
 %% ------------------------------------------------------------------ chapter 6
 \chapter{Multiclass SVM}
@@ -874,8 +869,8 @@ cap to 200 restores convergence in 153 iterations. The practical rule is to size
 bundle above the expected number of free support vectors, which large $C$ and simple
 kernels make small.
 
-We also implemented the standard pruning rule --- drop a cut whose master multiplier
-has been zero for 15 consecutive masters --- and measured it to be a no-op at these
+We also implemented the standard pruning rule, dropping a cut whose master multiplier
+has been zero for 15 consecutive masters, and measured it to be a no-op at these
 sizes (\textsc{wine} Gaussian 158 versus 160 iterations, maximum bundle 158 versus
 156). This is consistent with the above: nearly every cut is still needed to express
 $\hat\alpha$, so almost none go idle.
@@ -889,8 +884,8 @@ kernel it raised the total oracle-call count by $72\%$, because the bundle inher
 stability centre far from the new optimum and spends iterations undoing it.
 Transferring cuts is within noise, between $-4\%$ and $+2\%$ oracle calls.
 
-The honest conclusion is that for this decomposition the transferable quantity is the
-\emph{kernel matrix}, not the dual solution.
+For this decomposition, then, what transfers between the classes is the kernel
+matrix, not the dual solution.
 
 %% ------------------------------------------------------------------ appendix
 \appendix
@@ -925,12 +920,12 @@ Hence
 on $\{\alpha\ge0:\ \sum_i\alpha^k_iy^k_i=0\ \ \forall k\}$. The budget replaces the
 box $\alpha\le C$ of~\eqref{eq:dual} by a penalty, and the dual is non-differentiable
 where two or more classes tie for a contested budget, or at the kink
-$\max_k\alpha^k_i=C$ --- which is where the One-vs-Rest coupling actually happens.
+$\max_k\alpha^k_i=C$, which is where the One-vs-Rest coupling actually happens.
 
 With a \emph{hard} budget, \eqref{eq:budget} can be infeasible, and then its
-Lagrangian dual is unbounded. This is not a corner case: a sample lying where two
-classifiers both score near zero needs $\xi^k_i\approx1$ for each of them, so $B_i<2$
-is typically already infeasible. On a three-class Gaussian blob instance we measured
+Lagrangian dual is unbounded. This is not a corner case. A sample lying where two classifiers both score near zero
+needs $\xi^k_i\approx1$ from each of them, so $B_i<2$ is usually infeasible
+already. On a three-class Gaussian blob instance we measured
 the feasibility threshold at exactly $B_{\min}=2.0$, with~\eqref{eq:budgetdual}
 diverging for every $B<B_{\min}$ and strong duality holding to $10^{-8}$ for every
 $B\ge B_{\min}$. A single outlier destroys the training problem.
