@@ -1,7 +1,13 @@
-\documentclass[12pt,a4paper]{report}
+\documentclass[11pt,a4paper]{report}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[margin=3cm]{geometry}
+% compact chapter headings: the default report heading wastes ~2in of vertical
+% space per chapter, which is pure decoration
+\usepackage[compact]{titlesec}
+\titleformat{\chapter}[hang]{\Large\bfseries}{\thechapter.}{10pt}{\Large}
+\titlespacing*{\chapter}{0pt}{-20pt}{14pt}
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage[hypertexnames=false,hidelinks]{hyperref}
@@ -892,10 +898,7 @@ The honest conclusion is that for this decomposition the transferable quantity i
 \label{app:budget}
 
 For completeness we record an alternative model that couples the One-vs-Rest
-problems, together with a defect we found in it.
-
-\section{The model}
-Give each sample a single slack budget $B_i$ to be shared by all $q$ binary
+problems, together with a defect we found in it. Give each sample a single slack budget $B_i$ to be shared by all $q$ binary
 classifiers:
 \begin{equation}
 \label{eq:budget}
@@ -907,8 +910,6 @@ classifiers:
 \qquad \sum_{k=1}^q \xi^k_i\ \le\ B_i .
 \end{aligned}
 \end{equation}
-
-\section{Its dual}
 Dualising only the $mq$ margin constraints with $\alpha^k_i\ge0$ separates the
 variables. Minimising over $w^k$ gives $w^k=\sum_i\alpha^k_iy^k_i\phi_i$ and
 $-\tfrac12(\alpha^k)^{\!\top}Q^k\alpha^k$; minimising over $b^k$ forces
@@ -926,7 +927,6 @@ box $\alpha\le C$ of~\eqref{eq:dual} by a penalty, and the dual is non-different
 where two or more classes tie for a contested budget, or at the kink
 $\max_k\alpha^k_i=C$ --- which is where the One-vs-Rest coupling actually happens.
 
-\section{The defect, and its repair}
 With a \emph{hard} budget, \eqref{eq:budget} can be infeasible, and then its
 Lagrangian dual is unbounded. This is not a corner case: a sample lying where two
 classifiers both score near zero needs $\xi^k_i\approx1$ for each of them, so $B_i<2$
@@ -941,8 +941,7 @@ is always feasible, and boundedness of the $z$ term restores a box,
 $0\le\alpha\le(C+D)\one$, making $\mathrm{dom}\,\psi$ compact. We verified strong
 duality for the repaired model to $10^{-8}$ across a range of $B$, $D$, $q$ and $m$.
 
-\section{Why it is not the main line}
-Even repaired, \eqref{eq:budgetdual} retains the quadratic forms $Q^k$ \emph{inside}
+We nevertheless do not propose it as the main line. Even repaired, \eqref{eq:budgetdual} retains the quadratic forms $Q^k$ \emph{inside}
 the dual function, so the bundle's piecewise-linear model has to approximate a curved
 function and the method degenerates into solving a QP by cutting planes. The
 relaxation of Chapter~\ref{ch:dual}, by contrast, leaves an LP and keeps its only
