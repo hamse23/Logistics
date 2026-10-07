@@ -28,7 +28,8 @@
 %% ------------------------------------------------------------------ title page
 \begin{titlepage}
 \centering
-\vspace*{1.5cm}
+\vspace*{0.5cm}
+\includegraphics[width=4.2cm]{unipi-logo.png}\\[8mm]
 {\LARGE UNIVERSIT\`A DI PISA}\\[4mm]
 {\large DIPARTIMENTO DI INFORMATICA}\\[3mm]
 {\large Data Science and Business Informatics}% CHECK: your degree programme
@@ -93,24 +94,24 @@ solutions that help in solving the others.
 (the scalar product) of two elements of the feature space $\Hs$, a single real
 number, $\sum_i a_ib_i$ in the finite-dimensional case. We write it this way rather
 than $a^{\!\top}b$ because $\Hs$ may be infinite-dimensional, as it is for the
-Gaussian kernel, so there is no finite column of coordinates to transpose; $a^{\!\top}b$
-is the special case $\Hs=\R^n$. Ordinary vectors of $\R^m$, such as the multipliers
+Gaussian kernel, so there is no finite column of coordinates to transpose. The form
+$a^{\!\top}b$ is the special case $\Hs=\R^n$. Ordinary vectors of $\R^m$, such as the multipliers
 $\alpha$ and the labels $y$, are written with transposes as usual: $y^{\!\top}\alpha$,
 $\alpha^{\!\top}Q\alpha$. Finally $\one$ is the vector of all ones and
 $[t]^+=\max\{0,t\}$.
 
-The goal of this chapter is to describe the Support Vector Machine and to derive the
-Lagrangian dual formulation that defines the optimization task as a quadratic
-programming problem. The material is standard; it is included because
-Chapter~\ref{ch:dual} departs from it at one specific point, the stationarity
-condition~\eqref{eq:representer}, and that departure is easier to follow with the
-usual derivation in front of the reader.
+The goal of this chapter is to describe the Support Vector Machine and to derive its
+Lagrangian dual, so that the training task becomes a quadratic programming problem.
+The material here is standard. We include it because Chapter~\ref{ch:dual} departs
+from it at one specific point, the stationarity condition~\eqref{eq:representer},
+and that departure is much easier to follow with the usual derivation in front of
+the reader.
 
 \section{Soft margin formulation}
 Let $\{(x_i,y_i)\}_{i=1}^m$ with $x_i\in\R^n$ and $y_i\in\{-1,+1\}$, and let
 $\phi:\R^n\to\Hs$ be a feature map into a Hilbert space with reproducing kernel
-$\kappa(x,x')=\inner{\phi(x)}{\phi(x')}$; $\Hs$ is the reproducing kernel Hilbert
-space (RKHS) of $\kappa$, and may be infinite-dimensional. Write $\phi_i:=\phi(x_i)$.
+$\kappa(x,x')=\inner{\phi(x)}{\phi(x')}$. We call $\Hs$ the reproducing kernel Hilbert
+space (RKHS) of $\kappa$, and it may be infinite-dimensional. Write $\phi_i:=\phi(x_i)$.
 
 A separating hyperplane $H(w,b)=\{x:\inner{w}{\phi(x)}+b=0\}$ classifies correctly
 with margin at least one when $y_i(\inner{w}{\phi_i}+b)\ge1$ for all $i$, and the
@@ -158,7 +159,7 @@ w=\sum_{i=1}^m \alpha_i y_i \phi_i,
 \end{equation}
 The first of these deserves a name and a moment's attention, because
 Chapter~\ref{ch:dual} dualises precisely it. It says that at the optimum $w$ is a
-linear combination of the training points, with coefficients $\alpha_iy_i$; it is
+linear combination of the training points, with coefficients $\alpha_iy_i$. This is
 the \emph{representer identity}, the same statement as the representer theorem of
 kernel methods, and it is what makes kernels usable at all: however large the
 dimension of $\Hs$, the optimal $w$ is described by $m$ numbers.
@@ -212,10 +213,9 @@ coincide and the KKT conditions
 \alpha_i=C\quad &\Longrightarrow\quad y_if(x_i)\le1,
 \end{aligned}
 \end{equation}
-characterise optimality, where $f(x)=\sum_i\alpha_iy_i\kappa(x_i,x)+b$. Samples with
-$\alpha_i>0$ are the \emph{support vectors}; those with $0<\alpha_i<C$ are the
-\emph{free} support vectors. Their number will turn out to control the cost of (A1);
-see Section~\ref{sec:cost}.
+characterise optimality, where $f(x)=\sum_i\alpha_iy_i\kappa(x_i,x)+b$. Samples with $\alpha_i>0$ are the \emph{support vectors}, and those with
+$0<\alpha_i<C$ are the \emph{free} support vectors. We will see in
+Section~\ref{sec:cost} that their number controls the cost of (A1).
 
 \section{Primal and dual variables}
 \label{sec:recovery}
@@ -225,10 +225,10 @@ w^\star=\sum_i\alpha^\star_iy_i\phi_i,
 \qquad
 \xi^\star_i=\bigl[\,1-y_i(\inner{w^\star}{\phi_i}+b^\star)\,\bigr]^+ ,
 \]
-the first directly from the representer identity and the second from primal
-feasibility of the margin constraint together with complementarity on $\xi_i\ge0$
-(note the factor $y_i$ inside: $\xi_i$ measures the violation of \emph{the sample's
-own} margin, not of the hyperplane equation).
+The first follows directly from the representer identity. The second follows from
+primal feasibility of the margin constraint together with complementarity on
+$\xi_i\ge0$. Note the factor $y_i$ inside: $\xi_i$ measures the violation of
+\emph{the sample's own} margin, not of the hyperplane equation.
 
 The bias $b^\star$ needs more care. The textbook recipe reads it off any free support
 vector via~\eqref{eq:kkt}, averaging over them for stability. But the average is only
@@ -238,7 +238,7 @@ gap. The better observation is that $b$ enters the Lagrangian only through
 $-b\sum_i\alpha_iy_i$, so \emph{$b$ is the multiplier of the equality constraint
 $y^{\!\top}\alpha=0$}. Any algorithm that produces that multiplier explicitly can use
 it directly, with no support-vector bookkeeping at all. For an interior-point method
-it is one of the iterates; in our case the knapsack of Section~\ref{sec:knapsack}
+it is one of the iterates. In our case the knapsack of Section~\ref{sec:knapsack}
 supplies it at every oracle call, as~\eqref{eq:theta_is_b} proves by LP duality.
 
 \section{Kernel trick}
@@ -249,18 +249,23 @@ kernels used in this report are
 \item polynomial: $\kappa(x,x')=(\gamma\,x^{\!\top}x'+c_0)^d$, $\gamma>0$;
 \item Gaussian (RBF): $\kappa(x,x')=\exp(-\gamma\|x-x'\|^2)$, $\gamma>0$.
 \end{itemize}
-Unlike the linear case, for a nonlinear kernel $\Hs$ may be infinite-dimensional;
-Section~\ref{sec:kernelised} explains how the dual variable of (A1) is represented in
+For a nonlinear kernel $\Hs$ may be infinite-dimensional, unlike the linear case.
+Section~\ref{sec:kernelised} explains how we represent the dual variable of (A1) in
 that case.
 
 %% ------------------------------------------------------------------ chapter 3
 \chapter{The Lagrangian Dual}
 \label{ch:dual}
 
+The goal of this chapter is to choose which constraints to dualise, and to derive
+the dual function that the bundle method of Chapter~\ref{ch:bundle} will maximise.
+We first recall what a Lagrangian relaxation gives us, then show that the obvious
+candidates in the SVM dual are the wrong ones, and finally dualise the constraint
+that works.
+
 \section{What a Lagrangian relaxation is for}
 \label{sec:whyDual}
-Before choosing what to dualise it is worth recalling what the choice is supposed to
-buy. Given a problem $\min\{f(x): Ax\le b,\ x\in X\}$, relaxing the constraints
+Before choosing what to dualise, we recall what the choice is supposed to buy. Given a problem $\min\{f(x): Ax\le b,\ x\in X\}$, relaxing the constraints
 $Ax\le b$ with multipliers $\lambda$ removes them from the feasible set and charges
 for their violation in the objective, leaving
 \[
@@ -289,14 +294,13 @@ relaxation of this chapter one call costs a single kernel product and a sort, an
 the iteration counts we quote are counts of oracle calls. Three things follow, and they
 hold whatever $f$ and $X$ look like:
 \begin{itemize}
-\item $\psi(\lambda)\le v(\mathrm{P})$ for every $\lambda$, so \emph{every} oracle
-      call returns a valid lower bound on the optimal value;
-\item if a feasible point can be recovered from $x(\lambda)$, one also has a valid
-      upper bound, and hence a readily available estimate of the gap at every
-      iteration;
+\item $\psi(\lambda)\le v(\mathrm{P})$ for every $\lambda$, so every oracle call
+      returns a valid lower bound on the optimal value,
+\item if we can recover a feasible point from $x(\lambda)$, we also have a valid
+      upper bound, and so an estimate of the gap at every iteration,
 \item $\psi$ is concave and its supergradient is the constraint violation
       $b-Ax(\lambda)$, so the dual is a well-behaved problem even when the original
-      is not.
+      one is not.
 \end{itemize}
 The price is that one now has to search over $\lambda$. Whether the trade is worth
 making therefore depends entirely on \emph{what is left in the relaxed problem}: the
@@ -307,7 +311,8 @@ Section~\ref{sec:knapsack} that one non-obvious candidate is exactly the right o
 
 \section{Which constraints to dualise}
 \label{sec:choice}
-For a Lagrangian dual approach to be worth building, the relaxation must satisfy:
+For a Lagrangian dual approach to be worth building, the relaxation must satisfy
+three requirements:
 \begin{description}
 \item[(R1)] the relaxed problem must be \emph{substantially easier} than the
   original, ideally closed-form or combinatorial;
@@ -333,10 +338,10 @@ natural thing to try. It fails all three tests at once:
 \begin{itemize}
 \item \textbf{(R1)} the minimisation in~\eqref{eq:badrelax} is still a QP with the
       \emph{same dense Hessian} $Q$. A single scalar constraint has been removed and
-      the whole difficulty left in place;
+      the whole difficulty left in place.
 \item \textbf{(R2)} $\theta$ is one number, so the Lagrangian dual is univariate and
       a bisection solves it in a handful of evaluations, leaving nothing for a
-      bundle method to do;
+      bundle method to do.
 \item \textbf{(R3)} worse still, when $Q\succ0$, the typical case for a Gaussian
       kernel, the minimiser of~\eqref{eq:badrelax} is unique. Then $\psi\in C^1$ and
       the dual is smooth, so even a nonsmooth method would be the wrong tool.
@@ -373,7 +378,7 @@ The point of doing this is that $w$ and $\alpha$ are now \emph{untied}. They are
 descriptions of the same hyperplane, and~\eqref{eq:split} forces them to agree.
 Relaxing that constraint lets them disagree, at a price $\lambda$, so each can be
 optimised in whichever form suits it. The two groups of variables then separate. Minimising over $w\in\Hs$ is unconstrained
-and gives $w(\lambda)=-\lambda$ with value $-\tfrac12\|\lambda\|^2$; what remains is
+and gives $w(\lambda)=-\lambda$ with value $-\tfrac12\|\lambda\|^2$. What remains is
 \emph{linear} in $\alpha$ over $D$, because $\alpha$ now appears only linearly. The
 matrix $Q$ never forms: it existed only because $w$ and $\alpha$ were the same
 object, and they no longer are. Hence
@@ -425,7 +430,7 @@ $h(\theta^\star)=0$ exists and is found by sorting the $m$ breakpoints $y_ic_i$ 
 scanning (or by median search in $O(m)$ expected time). Splitting the tied components
 to make the equality hold exactly produces an $\alpha$ that minimises the Lagrangian
 of~\eqref{eq:kp} \emph{and} is feasible, hence optimal. Forming $c$ costs one kernel
-product; the rest costs $O(m\log m)$. This settles (R1): a dense QP has been replaced
+product, and the rest costs $O(m\log m)$. This settles (R1): a dense QP has been replaced
 by a sort. The scalar $\theta$ introduced here to solve~\eqref{eq:kp} is not just a
 device. Section~\ref{sec:whatitis} shows that it is the SVM bias $b$.
 
@@ -436,8 +441,8 @@ projection onto a hyperplane, and (KP) is its bounded-variable analogue.
 
 \section{Properties of the dual function}
 \begin{proposition}[finiteness]
-$D$ is a non-empty compact polytope, so the minimum in~\eqref{eq:psi} is attained and
-finite for every $\lambda$. Hence $\psi:\Hs\to\R$ is finite everywhere and concave
+Note first that $D$ is a non-empty compact polytope, so the minimum
+in~\eqref{eq:psi} is attained and finite for every $\lambda$. Hence $\psi:\Hs\to\R$ is finite everywhere and concave
 (and upper semicontinuous, so that it does not jump upwards in the limit, which is
 the regularity a maximisation needs for its optimum to be attained).
 \end{proposition}
@@ -468,8 +473,8 @@ non-differentiability. This settles (R3). The non-smoothness is not incidental: 
 where the solution lives.
 
 \begin{proposition}[no duality gap]
-\eqref{eq:split} is convex, its coupling constraint is affine and $D$ is compact;
-therefore $\max_\lambda\psi(\lambda)=v(\mathrm{D}')=v(\mathrm{D})$, and the maximiser
+\eqref{eq:split} is convex, its coupling constraint is affine and $D$ is compact.
+Therefore $\max_\lambda\psi(\lambda)=v(\mathrm{D}')=v(\mathrm{D})$, and the maximiser
 is $\lambda^\star=-w^\star$.
 \end{proposition}
 So the multiplier of the relaxed identity is, up to sign, the primal weight vector
@@ -566,6 +571,11 @@ on $v(\mathrm{D})$ rather than a bound on one's own objective only.
 \chapter{The Bundle Method}
 \label{ch:bundle}
 
+The goal of this chapter is to describe the algorithm we use to maximise $\psi$, and
+to show what the master problem gives us besides the optimal multiplier. We first
+recall the cutting-plane model and its stabilised master, then specialise both to
+our $\psi$, and finally read off the primal solution.
+
 \section{The cutting-plane model and the bundle}
 \label{sec:cpmodel}
 Nothing about $\psi$ is available in closed form. All an algorithm may do is call the
@@ -573,7 +583,7 @@ oracle of Chapter~\ref{ch:dual} at a point $\lambda$ and receive two things: the
 value $\psi(\lambda)$ and one supergradient $g(\lambda)$ from~\eqref{eq:supergrad}.
 A bundle method is built on the observation that this is more information than it
 looks. The development in this section is the standard one \cite{Kelley60,HUL93,Frangioni20},
-as presented in the course material \cite{CMslides}; we restate it because (A1) is
+as presented in the course material \cite{CMslides}. We restate it because (A1) is
 an instance of it, and because our setting is concave maximisation rather than
 convex minimisation, so every inequality is reversed and subgradients become
 supergradients. Section~\ref{sec:master} then departs from it.
@@ -595,22 +605,22 @@ wherever the oracle has been called.
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.85\textwidth]{fig-cuttingplane.pdf}
-\caption{The horizontal axis is $\mu$, the free variable of the inequality above;
-$\lambda^1$ and $\lambda^2$ are the two points at which the oracle has been called,
+\caption{The horizontal axis is $\mu$, the free variable of the inequality above.
+Here $\lambda^1$ and $\lambda^2$ are the two points at which the oracle has been called,
 and the drawing is the one-dimensional case, so that the supporting hyperplanes
 appear as lines. One oracle call at $\lambda$ returns $\psi(\lambda)$ and a
 supergradient, and hence a hyperplane that lies above $\psi$ \emph{everywhere}, not
 merely near $\lambda$: this is what concavity buys. The model is the pointwise minimum of the
 hyperplanes collected so far, so it too lies above $\psi$, and its maximum is an
 upper bound on $\psi^\star$. Each new call adds a hyperplane, which can only lower
-the minimum; the method probes next where the model is highest, since that is the
+the minimum. The method probes next where the model is highest, since that is the
 only place the maximum can be.}
 \label{fig:cp}
 \end{figure}
 
-Two things in the figure carry the whole method. First, the bound is global. A single
-call constrains $\psi$ at every point of $\Hs$, which is why first-order information
-about a concave function is more useful than it looks. Second, the model lies
+Two things in the figure carry the whole method. First, the bound is global. A single call constrains $\psi$ at every point of $\Hs$,
+and this is why first-order information about a concave function is more useful than
+it looks. Second, the model lies
 \emph{above} $\psi$, so $\max_\mu\psi_{\mathcal B}(\mu)\ \ge\ \psi^\star$. Maximising
 something we can solve bounds the quantity we cannot. Maximising the model in place of $\psi$ is the
 \emph{master problem}, and unlike $\psi$ it can actually be solved, being a small
@@ -626,7 +636,7 @@ displacement from it,
 \]
 where the \emph{proximal parameter} $t>0$ expresses how far from $\bar\lambda$ the
 model is trusted. (The course material \cite{CMslides} writes this with a parameter $\mu=1/t$
-multiplying rather than dividing; the two conventions are reciprocal.) The
+multiplying rather than dividing, so the two conventions are reciprocal.) The
 stabilised master is always bounded above, so its solution is always well defined,
 which the unstabilised one need not be.
 
@@ -673,7 +683,7 @@ unit simplex $\Delta^J$:
 after which
 $\lambda^{\mathrm{new}}=\bigl(\bar\lambda/t-\sum_j\vartheta_jb_j\bigr)/\rho$. Only
 the $J\times J$ Gram matrix $G_{jl}=\inner{b_j}{b_l}$ and the vector
-$p_j=\inner{b_j}{\bar\lambda}$ are needed; both are maintained incrementally, so a
+$p_j=\inner{b_j}{\bar\lambda}$ are needed, and we maintain both incrementally, so a
 master costs $O(J^2)$ plus one kernel product per new cut. We solve it with an
 off-the-shelf QP solver, which the project statement allows.
 
@@ -722,8 +732,8 @@ problem}, which here is~\eqref{eq:kp}. Generating those points one at a time is
 \emph{column generation}. Bundle on $\psi$, cutting planes on~\eqref{eq:hinge} and
 column generation on~\eqref{eq:dual} are thus three views of one algorithm. Two practical consequences:
 \begin{itemize}
-\item the master returns the primal solution $\hat\alpha\to\alpha^\star$, so nothing
-      extra is needed to recover the classifier;
+\item the master returns the primal solution $\hat\alpha\to\alpha^\star$, so we need
+      nothing extra to recover the classifier,
 \item $\psi(\lambda)\le v(\mathrm{D})\le
       \tfrac12\hat\alpha^{\!\top}Q\hat\alpha-\one^{\!\top}\hat\alpha$ at \emph{every}
       iteration, a \textbf{certified gap}, which decomposition algorithms for the
@@ -735,12 +745,12 @@ column generation on~\eqref{eq:dual} are thus three views of one algorithm. Two 
 For a general kernel $\Hs$ may be infinite-dimensional, so write
 $\lambda=\sum_j\beta_j\phi_j$. This is without loss of generality: a component of
 $\lambda$ orthogonal to $\mathrm{span}\{\phi_i\}$ leaves $c(\lambda)$ unchanged and
-only increases $\|\lambda\|^2$, so it is zero at the optimum. Then
+only increases $\|\lambda\|^2$, so at the optimum it is zero. Then
 $\inner{\lambda}{\phi_i}=(K\beta)_i$ and $\|\lambda\|^2=\beta^{\!\top}K\beta$, and one
 oracle call costs one matrix--vector product with $K$ plus a sort. Note that the
 correct stabilising term is the \emph{RKHS} norm
 $\|\lambda-\bar\lambda\|^2=(\beta-\bar\beta)^{\!\top}K(\beta-\bar\beta)$ rather than
-the Euclidean $\|\beta-\bar\beta\|^2$; it is the $K$-metric that
+the Euclidean $\|\beta-\bar\beta\|^2$. It is the $K$-metric that
 makes~\eqref{eq:masterdual} come out in the form above.
 
 \section{Cost, and how many cuts are needed}
@@ -801,17 +811,17 @@ y^k_i=\begin{cases}+1,&c_i=k\\ -1,&c_i\neq k\end{cases}
 \]
 and solve~\eqref{eq:primal}/\eqref{eq:dual} with $y=y^k$, obtaining
 $f^k(x)=\sum_i\alpha^k_iy^k_i\kappa(x_i,x)+b^k$. A new point is assigned to
-$\argmax_k f^k(x)$. It constructs $q$ models, against $q(q-1)/2$ for One-vs-One; see \cite{HsuLin02}
-for a comparison of the two.
+$\argmax_k f^k(x)$. It constructs $q$ models, against $q(q-1)/2$ for One-vs-One. See \cite{HsuLin02} for
+a comparison of the two.
 
-Three observations matter for what follows:
+Note that three observations matter for what follows:
 \begin{enumerate}
-\item The $q$ problems share \emph{the same} kernel matrix $K$; they differ only
-      through the label vector, since $Q^k=Y^kKY^k$ and $D^k$ depends on $k$ only
+\item The $q$ problems share the same kernel matrix $K$. They differ only through
+      the label vector, since $Q^k=Y^kKY^k$ and $D^k$ depends on $k$ only
       through the single equality $(y^k)^{\!\top}\alpha=0$. $Q^k$ is never formed.
-\item The classifiers are trained independently but compared at prediction time on a
-      common scale that nothing in the training enforces; this produces the familiar
-      One-vs-Rest pathologies, ties ($f^k(x)>0$ for two $k$) and rejections
+\item The classifiers are trained independently, but at prediction time we compare them
+      on a common scale that nothing in the training enforces. This produces the
+      familiar One-vs-Rest pathologies: ties ($f^k(x)>0$ for two $k$) and rejections
       ($f^k(x)<0$ for all $k$).
 \item Each binary problem is unbalanced, roughly $1:(q-1)$.
 \end{enumerate}
@@ -819,10 +829,10 @@ Three observations matter for what follows:
 \section{Does solving one problem help the others?}
 \label{sec:transfer}
 The project statement asks this explicitly. The $q$ problems differ only through
-$y^k$, so there are three candidate mechanisms, and they are not equally useful.
+$y^k$, so there are three candidate mechanisms. They are not equally useful, and we
+take them in turn.
 
-\paragraph{The kernel matrix.} $K$ is computed once and shared; $Q^k=Y^kKY^k$ is
-never formed, since the oracle only ever needs $K\beta$. Better still, the $q$ oracles
+\paragraph{The kernel matrix.} $K$ is computed once and shared. We never form $Q^k=Y^kKY^k$, because the oracle only ever needs $K\beta$. Better still, the $q$ oracles
 can be run in lockstep so that their $q$ matrix--vector products become one BLAS-3
 product $K\,[\beta^1\cdots\beta^q]$. This is a genuine, structural saving of a factor
 $q$ in the dominant cost.
@@ -868,8 +878,8 @@ classifiers:
 \end{equation}
 Dualising only the $mq$ margin constraints with $\alpha^k_i\ge0$ separates the
 variables. Minimising over $w^k$ gives $w^k=\sum_i\alpha^k_iy^k_i\phi_i$ and
-$-\tfrac12(\alpha^k)^{\!\top}Q^k\alpha^k$; minimising over $b^k$ forces
-$\sum_i\alpha^k_iy^k_i=0$; and minimising over $\xi$ splits across $i$ into the tiny
+$-\tfrac12(\alpha^k)^{\!\top}Q^k\alpha^k$. Minimising over $b^k$ forces
+$\sum_i\alpha^k_iy^k_i=0$. Minimising over $\xi$ splits across $i$ into the tiny
 LP $\min\{\sum_k(C-\alpha^k_i)\xi^k_i:\ \xi_i\ge0,\ \sum_k\xi^k_i\le B_i\}$, solved by
 inspection: put the whole budget on the most negative coefficient, or use none of it.
 Hence
