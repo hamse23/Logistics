@@ -286,7 +286,7 @@ value is produced: $\psi$ has no closed form, cannot be differentiated symbolica
 and cannot be inspected, so probing it point by point is all that is available. Everything in Chapter~\ref{ch:bundle} is built around that restriction,
 and the oracle call is consequently the unit in which we measure work: for the
 relaxation of this chapter one call costs a single kernel product and a sort, and
-the iteration counts reported in Chapter~\ref{ch:exp} are counts of oracle calls. Three things follow, and they
+the iteration counts we quote are counts of oracle calls. Three things follow, and they
 hold whatever $f$ and $X$ look like:
 \begin{itemize}
 \item $\psi(\lambda)\le v(\mathrm{P})$ for every $\lambda$, so \emph{every} oracle
@@ -530,8 +530,31 @@ planes. The knapsack multiplier $\theta$
 of~\eqref{eq:theta_is_b} is that partial minimisation, and the sort of
 Section~\ref{sec:knapsack} is how it is computed. Put another way, we bundle
 $g(w)=\min_b f(w,b)$ rather than $f(w,b)$, and $g$ is the better-conditioned object,
-one of its directions having been eliminated in closed form. The measured effect
-is reported in Section~\ref{sec:exp-baseline}.
+one of its directions having been eliminated in closed form.
+
+To see what that is worth we compared against the direct baseline, keeping everything
+else identical: the quadratic term treated exactly, a cutting-plane model of the
+rest, the same proximal term and the same master solver, so that the only difference
+is whether $b$ is a bundle variable.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llrr}
+\toprule
+dataset & kernel & $b$ in the bundle & $b$ eliminated (ours)\\
+\midrule
+\textsc{wine}   & linear   & 137 & 29\\
+\textsc{wine}   & Gaussian & 400 (gap $6\cdot10^{-5}$) & 133 (gap $1.1\cdot10^{-8}$)\\
+\textsc{iris}   & Gaussian & 96 & 24\\
+\textsc{cancer} & linear   & 220 & 52\\
+\bottomrule
+\end{tabular}
+\caption{Iterations to a relative gap of $10^{-8}$. The Gaussian \textsc{wine}
+baseline had not reached tolerance at the 400-iteration cap.}
+\end{table}
+
+That is a consistent factor of four to five, with one instance where the direct
+method does not reach tolerance at all.
 
 We claim exactly this much: the family of cuts and the function being optimised are
 the same as in the direct approach, and what relaxing the representer identity adds
@@ -728,10 +751,15 @@ question is how large $J$ must grow. The oracle returns essentially \emph{vertic
 of $D$, that is $0/C$ vectors, and $\hat\alpha$ is a convex combination of them: a
 component of $\alpha^\star$ sitting at a bound is produced by a single vertex, but
 every \emph{free} support vector $0<\alpha^\star_i<C$ must be produced by mixing
-vertices that disagree on $i$. We therefore expect, and measure in
-Section~\ref{sec:exp-cuts}, that the number of cuts the method needs is governed by
-the number of free support vectors, and that truncating the bundle below that number
-makes the gap stall, the classical Dantzig--Wolfe tailing-off.
+vertices that disagree on $i$. We therefore expect the number of cuts the method needs to be governed by the number
+of free support vectors, and truncating the bundle below that number to make the gap
+stall, which is the classical Dantzig--Wolfe tailing-off. This is what we observe. On
+\textsc{wine} ($m=178$) the linear kernel yields 12 free support vectors and the
+method reaches a gap of $2\cdot10^{-8}$ in 26 iterations. The Gaussian kernel with
+$\gamma=0.2$ yields 91 of them, and with the bundle capped at 60 cuts the gap stalls
+at $2\cdot10^{-4}$, while a cap of 200 restores convergence in 153 iterations. The
+practical rule is to size the bundle above the expected number of free support
+vectors, which large $C$ and simple kernels keep small.
 
 %% ------------------------------------------------------------------ chapter 5
 \chapter{The General-Purpose Solver}
@@ -746,8 +774,19 @@ H=Q,\qquad f=-\one,\qquad A_{\mathrm{eq}}=y^{\!\top},\qquad b_{\mathrm{eq}}=0,
 \qquad l=0,\qquad u=C\one ,
 \]
 and the bias is read off as the multiplier of the single equality row, exactly as in
-Section~\ref{sec:recovery}. This is our reference for solution quality, since we verify that (A1) and (A2) return
-the same $\alpha^\star$, $b$ and test accuracy, and also for running time.
+Section~\ref{sec:recovery}. This is our reference for solution quality and for
+running time.
+
+Both algorithms are implemented, and the formulation above has been checked against
+that reference. The $O(m\log m)$ knapsack matches a general LP solver to
+$1.4\cdot10^{-12}$ over 40 random instances. Strong duality holds,
+$\max_\lambda\psi=v(\mathrm{D})$, to a relative error below $4\cdot10^{-9}$ for
+linear, Gaussian and polynomial kernels and $C\in\{0.1,1,10\}$, and no violation of
+$\psi(\lambda)\le v(\mathrm{D})$ was found over 3000 random multipliers. The
+aggregated solution matches the QP solver's $\alpha^\star$ to $1.8\cdot10^{-7}$ and
+the knapsack multiplier matches its $b$ to $1.4\cdot10^{-7}$. One-vs-Rest built on
+(A1) and on (A2) gives identical test accuracy. A full experimental study, with
+timings against $m$ and model selection, is left for the final report.
 
 %% ------------------------------------------------------------------ chapter 6
 \chapter{Multiclass SVM}
@@ -801,91 +840,13 @@ imbalance is known in closed form and can be repaired in $O(m)$ by moving mass o
 $P_l$, \emph{preserving the support pattern} of the transferred cut. This costs no
 oracle call and no kernel product.
 
-Section~\ref{sec:exp-transfer} reports what each of the three is actually worth.
-
-%% ------------------------------------------------------------------ chapter 7
-\chapter{Experiments}
-\label{ch:exp}
-
-All results in this chapter are produced by the accompanying code; the correctness
-checks are in \texttt{run\_checks.py} and the baseline comparison in
-\texttt{compare\_baseline.py}.
-
-\section{Correctness}
-\label{sec:exp-correct}
-\begin{itemize}
-\item \textbf{The oracle.} Over 40 random instances the $O(m\log m)$ continuous
-      knapsack of Section~\ref{sec:knapsack} matches a general LP solver to
-      $1.4\cdot10^{-12}$ in objective value, with the equality satisfied and the
-      bounds respected to the same accuracy.
-\item \textbf{Strong duality.} $\max_\lambda\psi=v(\mathrm{D})$ to a relative error
-      below $4\cdot10^{-9}$ for linear, Gaussian and polynomial kernels and
-      $C\in\{0.1,1,10\}$.
-\item \textbf{Weak duality.} Over 3000 random multipliers, no violation of
-      $\psi(\lambda)\le v(\mathrm{D})$.
-\item \textbf{Primal recovery.} The aggregated solution matches the QP solver's
-      $\alpha^\star$ to $1.8\cdot10^{-7}$ relative, and the knapsack multiplier
-      matches its $b$ to $1.4\cdot10^{-7}$; separately,~\eqref{eq:theta_is_b} was
-      checked as an identity over 200 random score vectors with no mismatch.
-\item \textbf{End to end.} One-vs-Rest built on (A1) and on (A2) gives identical test
-      accuracy: \textsc{iris} $0.956$ linear and $0.978$ Gaussian, \textsc{wine}
-      $1.000$ for both kernels.
-\end{itemize}
-
-\section{Against the direct nonsmooth baseline}
-\label{sec:exp-baseline}
-To isolate the effect discussed in Section~\ref{sec:bmrm} we compare against a
-bundle method applied directly to $f(w,b)$, with $b$ as a bundle variable, keeping
-everything else identical: the quadratic term treated exactly, a cutting-plane model
-of the rest, the same proximal term and the same master solver.
-
-\begin{table}[h]
-\centering
-\begin{tabular}{llrr}
-\toprule
-dataset & kernel & $b$ in the bundle & $b$ eliminated (ours)\\
-\midrule
-\textsc{wine}   & linear   & 137 & 29\\
-\textsc{wine}   & Gaussian & 400 (gap $6\cdot10^{-5}$) & 133 (gap $1.1\cdot10^{-8}$)\\
-\textsc{iris}   & Gaussian & 96 & 24\\
-\textsc{cancer} & linear   & 220 & 52\\
-\bottomrule
-\end{tabular}
-\caption{Iterations to a relative gap of $10^{-8}$. The Gaussian \textsc{wine}
-baseline had not reached tolerance at the 400-iteration cap.}
-\end{table}
-
-A consistent factor of four to five, and one instance where the direct method does
-not reach tolerance at all.
-
-\section{Bundle size and free support vectors}
-\label{sec:exp-cuts}
-Section~\ref{sec:cost} predicts that the number of cuts needed is governed by the
-number of free support vectors. On \textsc{wine} ($m=178$) the linear kernel yields
-12 free support vectors and the method converges to a gap of $2\cdot10^{-8}$ in 26
-iterations; the Gaussian kernel with $\gamma=0.2$ yields 91 free support vectors, and
-with the bundle capped at 60 cuts the gap stalls at $2\cdot10^{-4}$, while raising the
-cap to 200 restores convergence in 153 iterations. The practical rule is to size the
-bundle above the expected number of free support vectors, which large $C$ and simple
-kernels make small.
-
-We also implemented the standard pruning rule, dropping a cut whose master multiplier
-has been zero for 15 consecutive masters, and measured it to be a no-op at these
-sizes (\textsc{wine} Gaussian 158 versus 160 iterations, maximum bundle 158 versus
-156). This is consistent with the above: nearly every cut is still needed to express
-$\hat\alpha$, so almost none go idle.
-
-\section{One-vs-Rest transfer}
-\label{sec:exp-transfer}
-Of the three mechanisms of Section~\ref{sec:transfer}, only the first is worth
-anything. Sharing the kernel matrix is worth a factor $q$ in the dominant cost.
-Warm-starting the multiplier is neutral to harmful: on \textsc{wine} with a Gaussian
-kernel it raised the total oracle-call count by $72\%$, because the bundle inherits a
-stability centre far from the new optimum and spends iterations undoing it.
-Transferring cuts is within noise, between $-4\%$ and $+2\%$ oracle calls.
-
-For this decomposition, then, what transfers between the classes is the kernel
-matrix, not the dual solution.
+Of the three, only the first is worth anything. Sharing the kernel matrix saves a
+factor $q$ in the dominant cost. Warm-starting the multiplier is neutral at best: on
+\textsc{wine} with a Gaussian kernel it raised the total oracle-call count by $72\%$,
+the bundle inheriting a stability centre far from the new optimum and spending
+iterations undoing it. Transferring cuts is within noise, between $-4\%$ and $+2\%$.
+What transfers between the classes, for this decomposition, is the kernel matrix and
+not the dual solution.
 
 %% ------------------------------------------------------------------ appendix
 \appendix
