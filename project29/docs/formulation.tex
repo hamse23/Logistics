@@ -53,8 +53,44 @@
 \end{flushright}
 \end{minipage}
 \vfill
+{\large Group 26 \quad---\quad Project 29}\\[3mm]
 {\large ANNO ACCADEMICO 2025/2026}% CHECK: academic year
 \end{titlepage}
+
+\thispagestyle{empty}
+\section*{Assignment, as originally stated}
+\begin{quote}
+\textbf{Project 29}
+
+\medskip
+(M) is a Support Vector Machine-type approach of your choice (in particular, with
+one or more kernels of your choice) for multi-class classification, e.g., using the
+standard One-to-Rest approach.
+
+\medskip
+(A1) is a dual approach, cf.\ constrained minimization slides, applied to either the
+primal or the dual formulation of the SVM, with appropriate choices of the
+constraints to be dualized, where the Lagrangian Dual is solved by an algorithm of
+the class of bundle methods.
+
+\medskip
+(A2) is a general-purpose solver applied to an appropriate formulation of the
+problem.
+
+\medskip
+Specific discussion should be provided about if and how solving one traning problem
+in the One-to-Rest approach may provide useful solution that may help in solving the
+others. Use of an off-the-shelf solver is allowed for the Master Problem of the
+bundle method, and of course for (A2).
+\end{quote}
+
+\medskip
+\noindent\textbf{Group 26}
+\begin{quote}
+Tolgonai Nasipbek kyzy, 626449, \texttt{t.nasipbekkyzy@studenti.unipi.it}\\
+Hamse Hassan Adnan, 683187, \texttt{h.adnan@studenti.unipi.it}
+\end{quote}
+\clearpage
 
 \tableofcontents
 
@@ -338,49 +374,16 @@ that works.
 
 \section{What a Lagrangian relaxation is for}
 \label{sec:whyDual}
-Before choosing what to dualise, we recall what the choice is supposed to buy. Given a problem $\min\{f(x): Ax\le b,\ x\in X\}$, relaxing the constraints
-$Ax\le b$ with multipliers $\lambda$ removes them from the feasible set and charges
-for their violation in the objective, leaving
-\[
-\psi(\lambda)=\min\{f(x)+\lambda(b-Ax)\ :\ x\in X\} .
-\]
-Note that this defines not one problem but a \emph{family} of them, one for each
-$\lambda$. We call the minimisation on the right \emph{the relaxed problem}.
-
-Solving it for one value of $\lambda$ is what is meant, here and throughout, by a
-call to the \emph{oracle}: a routine that is handed a point $\lambda$ and returns the
-value $\psi(\lambda)$ together with one \emph{supergradient} of $\psi$ there, that
-is a vector $g$ for which
-\[
-\psi(\mu)\ \le\ \psi(\lambda)+\inner{g}{\mu-\lambda}\qquad\forall\,\mu ,
-\]
-This is the concave counterpart of a subgradient. Where $\psi$ is differentiable the
-gradient is the only such $g$. At a kink there are many, and it is that multiplicity
-which makes nondifferentiable optimization hard. Chapter~\ref{ch:bundle} is built on
-this inequality, and Figure~\ref{fig:cp} illustrates it.
-
-The name is the standard one. The algorithm neither knows nor needs to know how the
-value is produced: $\psi$ has no closed form, cannot be differentiated symbolically
-and cannot be inspected, so probing it point by point is all that is available. Everything in Chapter~\ref{ch:bundle} is built around that restriction,
-and the oracle call is consequently the unit in which we measure work: for the
-relaxation of this chapter one call costs a single kernel product and a sort, and
-the iteration counts we quote are counts of oracle calls. Three things follow, and they
-hold whatever $f$ and $X$ look like:
-\begin{itemize}
-\item $\psi(\lambda)\le v(\mathrm{P})$ for every $\lambda$, so every oracle call
-      returns a valid lower bound on the optimal value,
-\item if we can recover a feasible point from $x(\lambda)$, we also have a valid
-      upper bound, and so an estimate of the gap at every iteration,
-\item $\psi$ is concave and its supergradient is the constraint violation
-      $b-Ax(\lambda)$, so the dual is a well-behaved problem even when the original
-      one is not.
-\end{itemize}
-The price is that one now has to search over $\lambda$. Whether the trade is worth
-making therefore depends entirely on \emph{what is left in the relaxed problem}: the
-constraints to dualise are the \emph{complicating} ones, and the ones to keep are
-those that make the residual problem easy. Section~\ref{sec:choice} shows that for
-the SVM dual the obvious candidates are exactly the wrong ones, and
-Section~\ref{sec:knapsack} that one non-obvious candidate is exactly the right one.
+We recall only what the choice has to buy, in the notation of the course material
+\cite{CMslides}. Relaxing $Ax\le b$ in $\min\{f(x):Ax\le b,\ x\in X\}$ with
+multipliers $\lambda$ leaves the \emph{relaxed problem}
+$\psi(\lambda)=\min\{f(x)+\lambda(b-Ax):x\in X\}$, one for each $\lambda$; solving it
+once is a call to the \emph{oracle}, which returns $\psi(\lambda)$ and the
+supergradient $b-Ax(\lambda)$. Whatever $f$ and $X$ are, $\psi$ is concave and
+$\psi(\lambda)\le v(\mathrm{P})$, so every call gives a valid bound. The price is a
+search over $\lambda$, so the choice turns on what is left in the relaxed problem:
+the constraints to dualise are the complicating ones, and the ones to keep are those
+that make the remainder easy.
 
 \section{Which constraints to dualise}
 \label{sec:choice}
@@ -513,6 +516,7 @@ breakpoint per variable. It appears there as a worked exercise in the course mat
 projection onto a hyperplane, and (KP) is its bounded-variable analogue.
 
 \section{Properties of the dual function}
+\label{sec:psiprops}
 \begin{proposition}[finiteness]
 Note first that $D$ is a non-empty compact polytope, so the minimum
 in~\eqref{eq:psi} is attained and finite for every $\lambda$. Hence $\psi:\Hs\to\R$ is finite everywhere and concave
@@ -634,29 +638,22 @@ our $\psi$, and finally read off the primal solution.
 
 \section{The cutting-plane model and the bundle}
 \label{sec:cpmodel}
-Nothing about $\psi$ is available in closed form. All an algorithm may do is call the
-oracle of Chapter~\ref{ch:dual} at a point $\lambda$ and receive two things: the
-value $\psi(\lambda)$ and one supergradient $g(\lambda)$ from~\eqref{eq:supergrad}.
-A bundle method is built on the observation that this is more information than it
-looks. The development in this section is the standard one \cite{Kelley60,HUL93,Frangioni20},
-as presented in the course material \cite{CMslides}. We restate it because (A1) is
-an instance of it, and because our setting is concave maximisation rather than
-convex minimisation, so every inequality is reversed and subgradients become
-supergradients. Section~\ref{sec:master} then departs from it.
+We recall the method only far enough to fix notation, following the course material
+\cite{CMslides} and \cite{Frangioni20}; our setting is concave maximisation, so every
+inequality below is reversed with respect to the usual convex statement.
 
-Because $\psi$ is concave, a single oracle call yields a bound that is valid
-\emph{everywhere}, not just near $\lambda$:
-\[
-\psi(\mu)\ \le\ \ell_\lambda(\mu):=\psi(\lambda)+\inner{g(\lambda)}{\mu-\lambda}
-\qquad\forall\,\mu\in\Hs .
-\]
-Collecting these as the algorithm proceeds gives the \emph{bundle}
-$\mathcal B=\{(\lambda^h,\psi^h,g^h)\}$, and their pointwise minimum
-\[
-\psi_{\mathcal B}(\mu)=\min\bigl\{\ell_{\lambda^h}(\mu)\ :\ (\lambda^h,\psi^h,g^h)\in\mathcal B\bigr\}\ \ge\ \psi(\mu)
-\]
-is the \emph{cutting-plane model} of $\psi$: an upper approximation that improves
-wherever the oracle has been called.
+The oracle at $\lambda$ returns $\psi(\lambda)$ and a supergradient $g(\lambda)$.
+Since $\psi$ is concave, one call bounds it \emph{everywhere},
+$\psi(\mu)\le\ell_\lambda(\mu):=\psi(\lambda)+\inner{g(\lambda)}{\mu-\lambda}$ for all
+$\mu$, and this global validity is what makes first-order information useful here.
+The collected triples form the \emph{bundle} $\mathcal B=\{(\lambda^h,\psi^h,g^h)\}$,
+whose pointwise minimum $\psi_{\mathcal B}\ge\psi$ is the \emph{cutting-plane model};
+maximising it is the \emph{master problem}. Because the bare model over-estimates
+where few cuts sit, the master is stabilised around a \emph{stability centre}
+$\bar\lambda$ by a proximal term with parameter $t$, and a \emph{serious step} moves
+the centre when the true $\psi$ delivers a fixed fraction $\kappa$ of the predicted
+improvement, a \emph{null step} keeping it and the new cut otherwise. The course
+material writes the stabilisation with $\mu=1/t$ multiplying rather than dividing.
 
 \begin{figure}[h]
 \centering
@@ -673,36 +670,6 @@ the minimum. The method probes next where the model is highest, since that is th
 only place the maximum can be.}
 \label{fig:cp}
 \end{figure}
-
-Two things in the figure carry the whole method. First, the bound is global. A single call constrains $\psi$ at every point of $\Hs$,
-and this is why first-order information about a concave function is more useful than
-it looks. Second, the model lies
-\emph{above} $\psi$, so $\max_\mu\psi_{\mathcal B}(\mu)\ \ge\ \psi^\star$. Maximising
-something we can solve bounds the quantity we cannot. Maximising the model in place of $\psi$ is the
-\emph{master problem}, and unlike $\psi$ it can actually be solved, being a small
-linear or quadratic program.
-
-Taken bare this does not work. Where few cuts have been placed the model is a gross
-over-estimate, so its maximiser can be arbitrarily far from anything yet explored,
-and the iterates oscillate. The fix is to stabilise. We keep a \emph{stability
-centre} $\bar\lambda$, in practice the best point found so far, and penalise
-displacement from it,
-\[
-\max_{\mu}\ \ \psi_{\mathcal B}(\mu)-\tfrac{1}{2t}\|\mu-\bar\lambda\|^2 ,
-\]
-where the \emph{proximal parameter} $t>0$ expresses how far from $\bar\lambda$ the
-model is trusted. (The course material \cite{CMslides} writes this with a parameter $\mu=1/t$
-multiplying rather than dividing, so the two conventions are reciprocal.) The
-stabilised master is always bounded above, so its solution is always well defined,
-which the unstabilised one need not be.
-
-Whether the model deserved that trust is then tested. If the true $\psi$ improves by
-at least a fixed fraction $\kappa\in(0,1)$ of the improvement the model predicted,
-the model is behaving and the centre moves to the new point. This is a \emph{serious
-step}, after which $t$ may be increased to allow longer steps. Otherwise the centre
-stays and only the new cut is kept, a \emph{null step}, after which $t$ is decreased.
-Either way the bundle has grown where the model was wrong, so a null step is progress
-too.
 
 \section{The structured master problem}
 \label{sec:master}
@@ -743,30 +710,11 @@ $p_j=\inner{b_j}{\bar\lambda}$ are needed, and we maintain both incrementally, s
 master costs $O(J^2)$ plus one kernel product per new cut. We solve it with an
 off-the-shelf QP solver, which the project statement allows.
 
-Collecting the pieces, (A1) is the following procedure.
-\begin{quote}
-\begin{tabbing}
-xx\=xx\=xx\=xx\kill
-$\bar\lambda\leftarrow0$; call the oracle; $\mathcal B\leftarrow\{\alpha^1\}$\\
-\textbf{repeat}\\
-\>solve the master~\eqref{eq:masterdual} for $\vartheta$; set
-  $\lambda^{\mathrm{new}}$ and $\hat\alpha=\sum_j\vartheta_j\alpha^j$\\
-\>$\mathrm{lb}\leftarrow\max\{\mathrm{lb},\ \psi(\lambda^{\mathrm{new}})\}$;\quad
-  $\mathrm{ub}\leftarrow\tfrac12\hat\alpha^{\!\top}Q\hat\alpha-\one^{\!\top}\hat\alpha$\\
-\>\textbf{if} $\mathrm{ub}-\mathrm{lb}\le\varepsilon$ \textbf{then stop}\\
-\>\textbf{if} $\psi(\lambda^{\mathrm{new}})\ \ge\ \psi(\bar\lambda)
-  +\kappa\bigl[\text{model}(\lambda^{\mathrm{new}})-\psi(\bar\lambda)\bigr]$\\
-\>\>\textbf{then} $\bar\lambda\leftarrow\lambda^{\mathrm{new}}$; $t\leftarrow$ larger
-  \qquad\textit{(serious step)}\\
-\>\>\textbf{else} $t\leftarrow$ smaller \qquad\qquad\qquad\ \ \textit{(null step)}\\
-\>$\mathcal B\leftarrow\mathcal B\cup\{\alpha^{\mathrm{new}}\}$, pruning if it has
-  grown too large\\
-\textbf{until} done
-\end{tabbing}
-\end{quote}
-Note the stopping rule: rather than the usual test on the length of the step, we can
-stop on the \emph{certified gap} of Section~\ref{sec:dw}, which brackets
-$v(\mathrm{D})$ from both sides and is available at no extra cost.
+Our variant differs from the generic scheme in two respects. The smooth part is
+carried in the master exactly rather than cut, as above, and we stop on the
+\emph{certified gap} of Section~\ref{sec:dw}, which brackets $v(\mathrm{D})$ from
+both sides at no extra cost, rather than on the usual test on the length of the
+step.
 
 \section{Primal recovery and Dantzig--Wolfe}
 \label{sec:dw}
@@ -880,6 +828,76 @@ is the subject of the second part of this work.
 
 %% ------------------------------------------------------------------ chapter 6
 %% ------------------------------------------------------------------ chapter 7
+\chapter{What to expect from the algorithms}
+\label{ch:expect}
+
+This chapter states the convergence and complexity properties we expect to see, the
+assumptions they rest on, and whether our problem satisfies them.
+
+\section{Assumptions, and whether we satisfy them}
+The convergence theory of proximal bundle methods \cite{Frangioni20,HUL93} assumes a
+convex (here concave) objective that is finite on the whole space, an oracle
+returning its value and one subgradient, and bounded subgradients on the region
+explored. We check these in turn.
+
+\emph{Concavity} holds: $\psi$ is a minimum of affine functions of $\lambda$ plus the
+concave term $-\tfrac12\|\lambda\|^2$ (Section~\ref{sec:psiprops}).
+
+\emph{Finiteness} holds, and this is the assumption that most often fails in
+Lagrangian relaxation. Because the relaxed problem is a minimisation over the compact
+polytope $D$, its optimum is attained for every $\lambda$, so $\psi>-\infty$
+everywhere. We therefore never need the feasibility cuts, nor the neutralisation of
+zero-curvature directions, that the course material warns about for relaxations whose
+inner problem can be unbounded.
+
+\emph{Differentiability} does \emph{not} hold, and is not assumed. It fails exactly
+where the knapsack has ties, which is the support-vector condition $y_if(x_i)=1$, and
+the maximiser is such a point. This is why a bundle method is used rather than a
+gradient method.
+
+\emph{Bounded subgradients.} The supergradient is
+$-\lambda-\Phi^{\!\top}Y\alpha(\lambda)$ with $\alpha(\lambda)\in D$ and
+$\|\alpha\|_\infty\le C$, so on any bounded set of multipliers the supergradients are
+bounded, and $\psi$ is Lipschitz there.
+
+\emph{No duality gap.} Problem~\eqref{eq:split} is convex, its coupling constraint is
+affine and $D$ is compact, so $\max_\lambda\psi=v(\mathrm{D})$. What the bundle method
+converges to is therefore the value we want, not a bound on it.
+
+\section{Convergence and complexity}
+With these assumptions the proximal bundle method converges to the optimum, and the
+complexity that the course material quotes for the nonsmooth convex case is
+$O(1/\varepsilon^2)$ iterations, the same order as the subgradient method, with the
+practical difference lying in the constant and in the behaviour in the tail. We
+expect the tail behaviour to matter here: the bundle accumulates cuts around the
+maximiser, and the smooth part $-\tfrac12\|\lambda\|^2$ is carried in the master
+exactly rather than approximated.
+
+The strong concavity of that term is worth isolating, because it is what the
+published analyses of cutting-plane methods for regularised risk minimisation
+\cite{Teo10,Joachims06,Franc08} exploit to obtain $O(1/\varepsilon)$ rather than
+$O(1/\varepsilon^2)$. Since Section~\ref{sec:whatitis} shows that our dual is that
+same regularised risk, we expect their rate to apply to (A1) as well.
+
+\emph{Per-iteration cost.} One oracle call is one kernel product, $O(m^2)$ in general
+and $O(mn)$ for a linear kernel, plus an $O(m\log m)$ sort. One master problem is a
+quadratic program over the unit simplex in $J$ variables, costing $O(J^2)$ in the
+solver and $O(Jm)$ to update the Gram matrix incrementally. We expect $J$ to grow
+with the number of free support vectors, for the reason given in
+Section~\ref{sec:cost}, so the dominant term should be $O(m^2)$ per iteration on
+kernel problems.
+
+For (A2) the interior-point solver on a dense convex quadratic program of order $m$
+costs $O(m^3)$ per iteration in the factorisation, in a number of iterations that is
+in practice nearly independent of $m$. This is the trade-off the experiments are
+meant to expose: (A1) pays little per iteration and may need many, (A2) pays a great
+deal per iteration and needs few.
+
+\emph{A caveat on the citations.} We quote these results from the sources listed, and
+before the final version we will verify each against the original and give the
+theorem and page number, as the project guidelines require.
+
+%% ------------------------------------------------------------------ chapter 7
 \chapter{What we are asking}
 \label{ch:ask}
 
@@ -976,9 +994,9 @@ One-vs-Rest SVM and changes only how it is solved.
 
 \begin{thebibliography}{99}
 
-\bibitem{CMslides} A. Frangioni. \emph{Computational Mathematics for Learning and
-Data Analysis}, course material, University of Pisa. (Decks on nondifferentiable
-unconstrained optimization and on constrained optimization.)
+\bibitem{CMslides} A. Frangioni. \emph{Optimization for Data Science} (784AA),
+course material, Universit\`a di Pisa. (Decks on nondifferentiable unconstrained
+optimization and on constrained optimization.)
 
 \bibitem{Frangioni20} A. Frangioni. Standard Bundle Methods: Untrusted Models and
 Duality. In \emph{Numerical Nonsmooth Optimization: State of the Art Algorithms},
