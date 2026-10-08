@@ -671,6 +671,7 @@ only place the maximum can be.}
 
 \section{The structured master problem}
 \label{sec:master}
+\label{sec:master}
 We depart from the generic scheme of Section~\ref{sec:cpmodel} in one respect.
 Writing $\psi=\psi_{\mathrm{sm}}+\psi_{\mathrm{pl}}$ as in Chapter~\ref{ch:dual},
 the smooth part $\psi_{\mathrm{sm}}(\lambda)=-\tfrac12\|\lambda\|^2$ is known in
@@ -733,10 +734,24 @@ Since Section~\ref{sec:cost} argues that the number of cuts needed tracks the nu
 of free support vectors, the cap has to be set above that number, and we will report
 what happens when it is not.
 
+\emph{The serious-step test.} Writing $\psi_{\mathcal B}$ for the model of
+Section~\ref{sec:master}, that is the exact quadratic plus the cuts, and
+$\lambda^{\mathrm{new}}$ for the master's solution, we take a serious step when
+\begin{equation}
+\label{eq:sstest}
+\psi(\lambda^{\mathrm{new}})-\psi(\bar\lambda)\ \ge\
+\kappa\,\bigl[\psi_{\mathcal B}(\lambda^{\mathrm{new}})-\psi(\bar\lambda)\bigr],
+\qquad \kappa\in(0,1),
+\end{equation}
+and a null step otherwise. Since $\psi_{\mathcal B}\ge\psi$ everywhere, the bracket is
+the improvement the model predicted and is non-negative, so the test asks that the
+true function deliver at least the fraction $\kappa$ of what was promised.
+
 \emph{Parameters.} The variant has four: the proximal parameter $t$, the fraction
-$\kappa\in(0,1)$ in the serious-step test, the cap on the bundle, and the tolerance
-on the certified gap. We increase $t$ after a serious step and decrease it after a
-null step, which is the usual heuristic. Their effect is one of the things the
+$\kappa$ of~\eqref{eq:sstest}, the cap on the bundle, and the tolerance on the
+certified gap, the run stopping when the bracket of Section~\ref{sec:dw} falls below
+it. We increase $t$ after a serious step and decrease it after a null step, which is
+the usual heuristic. Their effect is one of the things the
 experiments have to establish, since none of them has a value that theory fixes.
 
 \section{Primal recovery and Dantzig--Wolfe}
