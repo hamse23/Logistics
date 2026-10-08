@@ -61,6 +61,34 @@
 %% ------------------------------------------------------------------ chapter 1
 \chapter{Introduction}
 
+\section{The proposal in brief}
+The model (M) is the standard soft-margin SVM with Gaussian, polynomial or linear
+kernel, used for multi-class classification through the usual One-vs-Rest
+construction. We do not modify it.
+
+For (A1) we propose to dualise, not a constraint of the SVM dual, but the
+stationarity condition $w=\sum_i\alpha_iy_i\phi(x_i)$ that the usual derivation uses
+to eliminate $w$. Neither constraint of the dual is the difficulty there: relaxing
+the equality $y^{\!\top}\alpha=0$ or the box $0\le\alpha\le C$ leaves a quadratic
+program with the same dense Hessian $Q$, and in the first case a univariate dual.
+The difficulty is $Q$ itself, and $Q$ exists only because $w$ was eliminated. So we
+put $w$ back, which turns that identity into a constraint, and relax it.
+
+What is left after the relaxation is a linear program over a box with one equality
+constraint, a continuous knapsack that a sort solves in $O(m\log m)$. The dual
+function is finite everywhere, since the polytope is compact; it is defined on a
+space of dimension $n$ for a linear kernel and $m$ in general; and it is
+non-differentiable exactly where the knapsack ties, which is the support-vector
+condition $y_if(x_i)=1$. A bundle method is therefore the appropriate algorithm
+rather than an ornament.
+
+We also show that the maximum of this dual is the hinge-loss primal, which is how
+the SVM appears in the course material on nondifferentiable optimization. We think
+the dualisation still earns its place, because it eliminates the bias exactly at
+every oracle call, returns the SVM dual variables through the master problem's
+multipliers, and brackets the optimal value from both sides. Chapter~\ref{ch:ask}
+states the question we would like settled before we begin the experiments.
+
 \section{Description of the task}
 This report explores two different optimization algorithms applied to a machine
 learning model.
@@ -267,6 +295,33 @@ Section~\ref{sec:kernelised} explains how we represent the dual variable of (A1)
 that case.
 
 %% ------------------------------------------------------------------ chapter 3
+\chapter{Multiclass SVM}
+\label{ch:multiclass}
+
+The SVM is a binary classifier. With $q$ classes and labels
+$c_i\in\{1,\dots,q\}$, One-vs-Rest solves $q$ independent binary problems: for class
+$k$ set
+\[
+y^k_i=\begin{cases}+1,&c_i=k\\ -1,&c_i\neq k\end{cases}
+\]
+and solve~\eqref{eq:primal}/\eqref{eq:dual} with $y=y^k$, obtaining
+$f^k(x)=\sum_i\alpha^k_iy^k_i\kappa(x_i,x)+b^k$. A new point is assigned to
+$\argmax_k f^k(x)$. It constructs $q$ models, against $q(q-1)/2$ for One-vs-One. See \cite{HsuLin02} for
+a comparison of the two.
+
+Note that three observations matter for what follows:
+\begin{enumerate}
+\item The $q$ problems share the same kernel matrix $K$. They differ only through
+      the label vector, since $Q^k=Y^kKY^k$ and $D^k$ depends on $k$ only
+      through the single equality $(y^k)^{\!\top}\alpha=0$. $Q^k$ is never formed.
+\item The classifiers are trained independently, but at prediction time we compare them
+      on a common scale that nothing in the training enforces. This produces the
+      familiar One-vs-Rest pathologies: ties ($f^k(x)>0$ for two $k$) and rejections
+      ($f^k(x)<0$ for all $k$).
+\item Each binary problem is unbalanced, roughly $1:(q-1)$.
+\end{enumerate}
+
+%% ------------------------------------------------------------------ chapter 4
 \chapter{The Lagrangian Dual}
 \label{ch:dual}
 
@@ -765,54 +820,7 @@ large $C$ and simple kernels keep small, and the count of free support vectors
 becomes the quantity that predicts the cost of a run. Measuring this is part of the
 experimental work to come.
 
-%% ------------------------------------------------------------------ chapter 5
-\chapter{The General-Purpose Solver}
-\label{ch:a2}
-
-For (A2) the dual~\eqref{eq:dual} is handed as a dense convex QP to an off-the-shelf
-interior-point solver. Mapping it onto the generic QP interface
-$\min\{\tfrac12 z^{\!\top}Hz+f^{\!\top}z: A_{\mathrm{eq}}z=b_{\mathrm{eq}},\ l\le z\le u\}$
-requires only
-\[
-H=Q,\qquad f=-\one,\qquad A_{\mathrm{eq}}=y^{\!\top},\qquad b_{\mathrm{eq}}=0,
-\qquad l=0,\qquad u=C\one ,
-\]
-and the bias is read off as the multiplier of the single equality row, exactly as in
-Section~\ref{sec:recovery}. This is our reference for solution quality and for
-running time.
-
-Both algorithms have been implemented, and the experimental comparison between them
-is the subject of the second part of this work.
-
-%% ------------------------------------------------------------------ chapter 6
-\chapter{Multiclass SVM}
-\label{ch:multiclass}
-
-\section{One-vs-Rest approach}
-The SVM is a binary classifier. With $q$ classes and labels
-$c_i\in\{1,\dots,q\}$, One-vs-Rest solves $q$ independent binary problems: for class
-$k$ set
-\[
-y^k_i=\begin{cases}+1,&c_i=k\\ -1,&c_i\neq k\end{cases}
-\]
-and solve~\eqref{eq:primal}/\eqref{eq:dual} with $y=y^k$, obtaining
-$f^k(x)=\sum_i\alpha^k_iy^k_i\kappa(x_i,x)+b^k$. A new point is assigned to
-$\argmax_k f^k(x)$. It constructs $q$ models, against $q(q-1)/2$ for One-vs-One. See \cite{HsuLin02} for
-a comparison of the two.
-
-Note that three observations matter for what follows:
-\begin{enumerate}
-\item The $q$ problems share the same kernel matrix $K$. They differ only through
-      the label vector, since $Q^k=Y^kKY^k$ and $D^k$ depends on $k$ only
-      through the single equality $(y^k)^{\!\top}\alpha=0$. $Q^k$ is never formed.
-\item The classifiers are trained independently, but at prediction time we compare them
-      on a common scale that nothing in the training enforces. This produces the
-      familiar One-vs-Rest pathologies: ties ($f^k(x)>0$ for two $k$) and rejections
-      ($f^k(x)<0$ for all $k$).
-\item Each binary problem is unbalanced, roughly $1:(q-1)$.
-\end{enumerate}
-
-\section{Does solving one problem help the others?}
+\section{Does solving one One-vs-Rest problem help the others?}
 \label{sec:transfer}
 The project statement asks this explicitly. The $q$ problems differ only through
 $y^k$, so there are three candidate mechanisms. They are not equally useful, and we
@@ -845,6 +853,67 @@ completely from one problem to the next, and a stability centre inherited from t
 wrong place costs iterations to undo. Transferring cuts does no harm, but a repaired
 cut need not be an informative one. Which of the three is worth its complexity is a
 question for the experiments.
+
+%% ------------------------------------------------------------------ chapter 5
+\chapter{The General-Purpose Solver}
+\label{ch:a2}
+
+For (A2) the dual~\eqref{eq:dual} is handed as a dense convex QP to an off-the-shelf
+interior-point solver. Mapping it onto the generic QP interface
+$\min\{\tfrac12 z^{\!\top}Hz+f^{\!\top}z: A_{\mathrm{eq}}z=b_{\mathrm{eq}},\ l\le z\le u\}$
+requires only
+\[
+H=Q,\qquad f=-\one,\qquad A_{\mathrm{eq}}=y^{\!\top},\qquad b_{\mathrm{eq}}=0,
+\qquad l=0,\qquad u=C\one ,
+\]
+and the bias is read off as the multiplier of the single equality row, exactly as in
+Section~\ref{sec:recovery}. This is our reference for solution quality and for
+running time.
+
+Both algorithms have been implemented, and the experimental comparison between them
+is the subject of the second part of this work.
+
+%% ------------------------------------------------------------------ chapter 6
+%% ------------------------------------------------------------------ chapter 7
+\chapter{What we are asking}
+\label{ch:ask}
+
+We summarise the proposal and state the one point on which we would like a decision
+before starting the experiments.
+
+The model is untouched. (M) is the standard C-SVM, and One-vs-Rest is built on top of
+it in the usual way, so nothing in this report changes what is being learned. What we
+propose is a different choice of what to dualise. Rather than relax a constraint of
+the SVM dual, which leaves the dense Hessian in place and, for the equality, a
+univariate dual, we reinstate $w$ and relax the identity that produced that Hessian.
+The relaxed problem is then a continuous knapsack solved by a sort, the dual function
+is finite everywhere and non-differentiable at the support-vector condition, and it
+has as many variables as the feature space or the sample. These are the three
+properties that make a bundle method the right algorithm rather than a decorative
+one, and Chapter~\ref{ch:dual} establishes them.
+
+The point we would like settled is the one raised in Section~\ref{sec:bmrm}. The
+maximum of our dual is the hinge-loss primal, which is where the course material
+starts when it motivates nondifferentiable optimization. A reader may object that we
+have dualised our way back to the problem we began with, and are then running a
+known cutting-plane method on it. Our answer is that the dualisation is not a detour
+and buys three things: the bias is eliminated exactly at every oracle call rather
+than approximated by cuts, the master problem's multipliers return a feasible
+$\hat\alpha\in D$ and so the SVM dual variables themselves, and $\psi$ together with
+the restricted problem bracket $v(\mathrm{D})$ from both sides at every iteration. We
+claim no more than that. If it is judged too thin to count as a different dual
+approach, we would rather know now than after the experimental work.
+
+The alternative we considered is in Appendix~\ref{app:budget}, written out as
+requested. We set it aside because it changes (M), which would confound a modelling
+change with an algorithmic one, and because writing out its dual showed that a hard
+budget makes the primal infeasible unless each sample is given about two units of
+slack.
+
+If the formulation is accepted, the second part of the report will compare (A1) with
+(A2) on the standard benchmarks, measure how the bundle grows with the number of
+free support vectors, test which of the three One-vs-Rest transfer mechanisms is
+worth its complexity, and report timings and model selection.
 
 %% ------------------------------------------------------------------ appendix
 \appendix
