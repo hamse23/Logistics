@@ -290,6 +290,9 @@ kernels used in this report are
 \item polynomial: $\kappa(x,x')=(\gamma\,x^{\!\top}x'+c_0)^d$, $\gamma>0$;
 \item Gaussian (RBF): $\kappa(x,x')=\exp(-\gamma\|x-x'\|^2)$, $\gamma>0$.
 \end{itemize}
+We will use all three. The linear kernel is the case in which the dual variable of
+(A1) stays in $\R^n$ and no Gram matrix is needed, and the other two exercise the
+kernelised form of Section~\ref{sec:kernelised}, where it lives in $\R^m$.
 For a nonlinear kernel $\Hs$ may be infinite-dimensional, unlike the linear case.
 Section~\ref{sec:kernelised} explains how we represent the dual variable of (A1) in
 that case.
@@ -327,6 +330,8 @@ Note that three observations matter for what follows:
 
 The goal of this chapter is to choose which constraints to dualise, and to derive
 the dual function that the bundle method of Chapter~\ref{ch:bundle} will maximise.
+We follow the treatment of partial Lagrangian relaxation in the course material on
+constrained optimization \cite{CMslides}, to which the project statement refers.
 We first recall what a Lagrangian relaxation gives us, then show that the obvious
 candidates in the SVM dual are the wrong ones, and finally dualise the constraint
 that works.
