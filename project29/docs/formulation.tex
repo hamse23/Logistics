@@ -36,7 +36,8 @@
 \vfill
 {\Huge\bfseries Project 29}\\[10mm]
 {\LARGE Multi-class SVM with a Lagrangian}\\[3mm]
-{\LARGE Dual and Bundle Methods}
+{\LARGE Dual and Bundle Methods}\\[8mm]
+{\large\itshape Part I: formulation}
 \vfill
 \begin{minipage}{0.45\textwidth}
 \begin{flushleft}
@@ -85,6 +86,18 @@ master problem of the bundle method.
 Specific discussion is provided in Chapter~\ref{ch:multiclass} about if and how
 solving one training problem in the One-vs-Rest approach may provide useful
 solutions that help in solving the others.
+
+\section{Scope of this document}
+This document covers the formulation only. It states the model, derives the
+Lagrangian dual we propose for (A1), describes the bundle method that solves it and
+the general-purpose solver used for (A2), and says what we expect each of them to
+do. We submit it in advance, as the course guidelines suggest, so that the choice of
+what to dualise can be confirmed before the experimental work is done.
+
+Both algorithms have been implemented. The experimental study, with the comparison
+between (A1) and (A2), the behaviour of the bundle as the data grows, the
+One-vs-Rest transfer, timings and model selection, will form the second part of the
+report. No measured result is quoted here.
 
 %% ------------------------------------------------------------------ chapter 2
 \chapter{SVM Problem Formulation}
@@ -537,29 +550,12 @@ Section~\ref{sec:knapsack} is how it is computed. Put another way, we bundle
 $g(w)=\min_b f(w,b)$ rather than $f(w,b)$, and $g$ is the better-conditioned object,
 one of its directions having been eliminated in closed form.
 
-To see what that is worth we compared against the direct baseline, keeping everything
-else identical: the quadratic term treated exactly, a cutting-plane model of the
-rest, the same proximal term and the same master solver, so that the only difference
-is whether $b$ is a bundle variable.
-
-\begin{table}[h]
-\centering
-\begin{tabular}{llrr}
-\toprule
-dataset & kernel & $b$ in the bundle & $b$ eliminated (ours)\\
-\midrule
-\textsc{wine}   & linear   & 137 & 29\\
-\textsc{wine}   & Gaussian & 400 (gap $6\cdot10^{-5}$) & 133 (gap $1.1\cdot10^{-8}$)\\
-\textsc{iris}   & Gaussian & 96 & 24\\
-\textsc{cancer} & linear   & 220 & 52\\
-\bottomrule
-\end{tabular}
-\caption{Iterations to a relative gap of $10^{-8}$. The Gaussian \textsc{wine}
-baseline had not reached tolerance at the 400-iteration cap.}
-\end{table}
-
-That is a consistent factor of four to five, with one instance where the direct
-method does not reach tolerance at all.
+We expect this to matter in practice. A cutting-plane model has to spend cuts on
+every direction it approximates, and the $b$ direction is one that we can remove
+exactly for the price of a sort. Eliminating it should therefore buy a lower
+iteration count, and comparing (A1) against a bundle method applied directly to
+$f(w,b)$, with everything else held equal, is the experiment that would settle it.
+We intend to report that comparison.
 
 We claim exactly this much: the family of cuts and the function being optimised are
 the same as in the direct approach, and what relaxing the representer identity adds
@@ -763,13 +759,11 @@ component of $\alpha^\star$ sitting at a bound is produced by a single vertex, b
 every \emph{free} support vector $0<\alpha^\star_i<C$ must be produced by mixing
 vertices that disagree on $i$. We therefore expect the number of cuts the method needs to be governed by the number
 of free support vectors, and truncating the bundle below that number to make the gap
-stall, which is the classical Dantzig--Wolfe tailing-off. This is what we observe. On
-\textsc{wine} ($m=178$) the linear kernel yields 12 free support vectors and the
-method reaches a gap of $2\cdot10^{-8}$ in 26 iterations. The Gaussian kernel with
-$\gamma=0.2$ yields 91 of them, and with the bundle capped at 60 cuts the gap stalls
-at $2\cdot10^{-4}$, while a cap of 200 restores convergence in 153 iterations. The
-practical rule is to size the bundle above the expected number of free support
-vectors, which large $C$ and simple kernels keep small.
+stall, which is the classical Dantzig--Wolfe tailing-off. If that is right, the
+bundle has to be sized above the expected number of free support vectors, which
+large $C$ and simple kernels keep small, and the count of free support vectors
+becomes the quantity that predicts the cost of a run. Measuring this is part of the
+experimental work to come.
 
 %% ------------------------------------------------------------------ chapter 5
 \chapter{The General-Purpose Solver}
@@ -787,16 +781,8 @@ and the bias is read off as the multiplier of the single equality row, exactly a
 Section~\ref{sec:recovery}. This is our reference for solution quality and for
 running time.
 
-Both algorithms are implemented, and the formulation above has been checked against
-that reference. The $O(m\log m)$ knapsack matches a general LP solver to
-$1.4\cdot10^{-12}$ over 40 random instances. Strong duality holds,
-$\max_\lambda\psi=v(\mathrm{D})$, to a relative error below $4\cdot10^{-9}$ for
-linear, Gaussian and polynomial kernels and $C\in\{0.1,1,10\}$, and no violation of
-$\psi(\lambda)\le v(\mathrm{D})$ was found over 3000 random multipliers. The
-aggregated solution matches the QP solver's $\alpha^\star$ to $1.8\cdot10^{-7}$ and
-the knapsack multiplier matches its $b$ to $1.4\cdot10^{-7}$. One-vs-Rest built on
-(A1) and on (A2) gives identical test accuracy. A full experimental study, with
-timings against $m$ and model selection, is left for the final report.
+Both algorithms have been implemented, and the experimental comparison between them
+is the subject of the second part of this work.
 
 %% ------------------------------------------------------------------ chapter 6
 \chapter{Multiclass SVM}
@@ -850,13 +836,15 @@ imbalance is known in closed form and can be repaired in $O(m)$ by moving mass o
 $P_l$, \emph{preserving the support pattern} of the transferred cut. This costs no
 oracle call and no kernel product.
 
-Of the three, only the first is worth anything. Sharing the kernel matrix saves a
-factor $q$ in the dominant cost. Warm-starting the multiplier is neutral at best: on
-\textsc{wine} with a Gaussian kernel it raised the total oracle-call count by $72\%$,
-the bundle inheriting a stability centre far from the new optimum and spending
-iterations undoing it. Transferring cuts is within noise, between $-4\%$ and $+2\%$.
-What transfers between the classes, for this decomposition, is the kernel matrix and
-not the dual solution.
+Only the first of the three is certain to pay. Sharing the kernel matrix saves a
+factor $q$ in the dominant cost, and that saving is structural rather than
+circumstantial. The other two are plausible but not obviously useful, and we are
+cautious about both. Warm-starting the multiplier assumes that consecutive
+hyperplanes are similar, which they need not be, since the positive class changes
+completely from one problem to the next, and a stability centre inherited from the
+wrong place costs iterations to undo. Transferring cuts does no harm, but a repaired
+cut need not be an informative one. Which of the three is worth its complexity is a
+question for the experiments.
 
 %% ------------------------------------------------------------------ appendix
 \appendix
@@ -896,16 +884,12 @@ $\max_k\alpha^k_i=C$, which is where the One-vs-Rest coupling actually happens.
 With a \emph{hard} budget, \eqref{eq:budget} can be infeasible, and then its
 Lagrangian dual is unbounded. This is not a corner case. A sample lying where two classifiers both score near zero
 needs $\xi^k_i\approx1$ from each of them, so $B_i<2$ is usually infeasible
-already. On a three-class Gaussian blob instance we measured
-the feasibility threshold at exactly $B_{\min}=2.0$, with~\eqref{eq:budgetdual}
-diverging for every $B<B_{\min}$ and strong duality holding to $10^{-8}$ for every
-$B\ge B_{\min}$. A single outlier destroys the training problem.
+already, and a single outlier is enough to destroy the training problem.
 
 The repair is to soften the budget: $\sum_k\xi^k_i\le B_i+z_i$ with $z_i\ge0$
 penalised by $Dz_i$. The $\xi$ subproblem stays an LP solved by inspection, the model
 is always feasible, and boundedness of the $z$ term restores a box,
-$0\le\alpha\le(C+D)\one$, making $\mathrm{dom}\,\psi$ compact. We verified strong
-duality for the repaired model to $10^{-8}$ across a range of $B$, $D$, $q$ and $m$.
+$0\le\alpha\le(C+D)\one$, making $\mathrm{dom}\,\psi$ compact.
 
 We nevertheless do not propose it as the main line. Even repaired, \eqref{eq:budgetdual} retains the quadratic forms $Q^k$ \emph{inside}
 the dual function, so the bundle's piecewise-linear model has to approximate a curved
