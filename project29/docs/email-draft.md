@@ -2,15 +2,26 @@
 
 > Draft only — read it, cut what you disagree with, send it in your own words.
 > It deliberately puts the one question he has to rule on near the top, rather than
-> leaving him to discover it in Section 3.6.
+> leaving him to discover it in Section 4.7 of the report.
 
 ---
 
-**Subject:** Re: 784AA Project 29 — revised formulation (Group 26)
+**Subject:** 784AA Project 29 (Group 26) — report, parts 3.3 and 3.4
+
+Attachment: one PDF. No code, no repository link: the guidelines put the code
+after the report is accepted.
 
 Dear Prof. Frangioni,
 
-We took the second option: (M) stays the standard C-SVM, One-vs-Rest is built on top
+Following the suggestion in the project information to send the report in
+instalments, and to complete the theoretical part before investing in the
+implementation, we enclose the parts described in Sections 3.3 and 3.4 of the
+guidelines: the description of the problem and of the algorithms with the
+derivations they require, and what we expect from the algorithms. The experimental
+set-up and the results, Sections 3.6 and 3.7, will follow once the formulation is
+settled. The code is not enclosed, as it comes after the report is accepted.
+
+On the substance, we took the second option you offered: (M) stays the standard C-SVM, One-vs-Rest is built on top
 of it unchanged, and we looked for a different dual approach for the binary problem.
 
 Both our earlier attempts failed for one reason we had not seen. In the SVM dual
