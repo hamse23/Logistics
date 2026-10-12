@@ -164,10 +164,12 @@ the general-purpose solver used for (A2), and says what we expect each of them t
 do. We submit it in advance, as the course guidelines suggest, so that the choice of
 what to dualise can be confirmed before the experimental work is done.
 
-Both algorithms have been implemented. The experimental study, with the comparison
-between (A1) and (A2), the behaviour of the bundle as the data grows, the
-One-vs-Rest transfer, timings and model selection, will form the second part of the
-report. No measured result is quoted here.
+Both algorithms have been implemented, and Section~\ref{ch:expect} reports a first
+check of the formulation and a small comparison, because the guidelines ask in that
+part whether we expect the properties to matter in practice. It is an indication,
+not a study. The experimental part proper, with the comparison between (A1) and
+(A2) over a realistic range of sizes, the behaviour of the bundle as the data grows,
+the One-vs-Rest transfer, timings and parameter sensitivity, will follow.
 
 %% ------------------------------------------------------------------ chapter 2
 \chapter{SVM Problem Formulation}
@@ -930,6 +932,46 @@ costs $O(m^3)$ per iteration in the factorisation, in a number of iterations tha
 in practice nearly independent of $m$. This is the trade-off the experiments are
 meant to expose: (A1) pays little per iteration and may need many, (A2) pays a great
 deal per iteration and needs few.
+
+\section{A preliminary check}
+We have implemented both algorithms, and although the experimental study belongs to
+the later parts of the report, two things are worth reporting here because
+Section~3.4 of the project information asks whether we expect these properties to
+matter in practice.
+
+The first concerns the assumptions above. Strong duality holds in our runs to a
+relative error below $4\cdot10^{-9}$ for the three kernels and $C\in\{0.1,1,10\}$,
+the knapsack agrees with a general LP solver to $1.4\cdot10^{-12}$, and the
+aggregated solution and the knapsack multiplier reproduce the $\alpha^\star$ and $b$
+of a general-purpose QP solver to about $10^{-7}$. The formulation is therefore not
+merely plausible on paper.
+
+The second concerns the claim of Section~\ref{sec:bmrm}, that eliminating $b$ exactly
+should cost fewer iterations than approximating that direction with cuts. Comparing
+(A1) with a bundle method applied directly to $f(w,b)$, with $b$ as a bundle variable
+and everything else held equal, gives:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llrr}
+\toprule
+dataset & kernel & $b$ in the bundle & $b$ eliminated (ours)\\
+\midrule
+\textsc{wine}   & linear   & 137 & 29\\
+\textsc{wine}   & Gaussian & 400 (gap $6\cdot10^{-5}$) & 133 (gap $1.1\cdot10^{-8}$)\\
+\textsc{iris}   & Gaussian & 96 & 24\\
+\textsc{cancer} & linear   & 220 & 52\\
+\bottomrule
+\end{tabular}
+\caption{Iterations to a relative gap of $10^{-8}$ on a first, small set of
+instances. The Gaussian \textsc{wine} baseline had not reached tolerance at the
+400-iteration cap.}
+\end{table}
+
+A factor of four to five, and one instance where the direct method does not reach
+tolerance at all. We report this as an indication rather than a result: four
+instances is not a study, and the proper comparison, over a realistic range of sizes
+and with the parameter sensitivity, belongs to the experimental part.
 
 \emph{A caveat on the citations.} We quote these results from the sources listed, and
 before the final version we will verify each against the original and give the
