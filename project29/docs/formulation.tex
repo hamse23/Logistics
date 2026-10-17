@@ -7,13 +7,8 @@
 % space per chapter, which is pure decoration
 \usepackage[compact]{titlesec}
 \titleformat{\chapter}[hang]{\Large\bfseries}{\thechapter.}{10pt}{\Large}
-\titlespacing*{\chapter}{0pt}{6pt}{12pt}
-% chapters run on rather than each starting a new page: with nine of them the
-% forced breaks cost several pages of white space, and nothing requires them
-\usepackage{etoolbox}
-\makeatletter
-\patchcmd{\chapter}{\if@openright\cleardoublepage\else\clearpage\fi}{}{}{}
-\makeatother
+\titlespacing*{\chapter}{0pt}{-20pt}{14pt}
+
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage[hypertexnames=false,hidelinks]{hyperref}
