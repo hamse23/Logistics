@@ -465,8 +465,8 @@ direction with cutting planes. The knapsack multiplier $\theta$
 of~\eqref{eq:theta_is_b} \emph{is} that exact partial minimisation, and the sort of
 Section~\ref{sec:knapsack} is how it is computed. Equivalently: we bundle
 $g(w)=\min_b f(w,b)$ rather than $f(w,b)$, and $g$ is the better-conditioned object
-because one of its directions has been eliminated in closed form. The measured effect
-is reported in Chapter~\ref{ch:expect}.
+because one of its directions has been eliminated in closed form. Measuring that
+effect is part of the experimental work to come.
 
 We claim exactly this much: the family of cuts and the function being optimised are
 the same as in the direct approach, and what relaxing the representer identity adds
@@ -742,116 +742,6 @@ cut need not be an informative one. Which of the three is worth its complexity i
 question for the experiments.
 
 %% ------------------------------------------------------------------ chapter 7
-\chapter{What to expect from the algorithms}
-\label{ch:expect}
-
-This chapter states the convergence and complexity properties we expect to see, the
-assumptions they rest on, and whether our problem satisfies them.
-
-\section{Assumptions, and whether we satisfy them}
-The convergence theory of proximal bundle methods \cite{Frangioni20,HUL93} assumes a
-convex (here concave) objective that is finite on the whole space, an oracle
-returning its value and one subgradient, and bounded subgradients on the region
-explored. We check these in turn.
-
-\emph{Concavity} holds: $\psi$ is a minimum of affine functions of $\lambda$ plus the
-concave term $-\tfrac12\|\lambda\|^2$ (Section~\ref{sec:psiprops}).
-
-\emph{Finiteness} holds, and this is the assumption that most often fails in
-Lagrangian relaxation. Because the relaxed problem is a minimisation over the compact
-polytope $D$, its optimum is attained for every $\lambda$, so $\psi>-\infty$
-everywhere. We therefore never need the feasibility cuts, nor the neutralisation of
-zero-curvature directions, that the course material warns about for relaxations whose
-inner problem can be unbounded.
-
-\emph{Differentiability} does \emph{not} hold, and is not assumed. It fails exactly
-where the knapsack has ties, which is the support-vector condition $y_if(x_i)=1$, and
-the maximiser is such a point. This is why a bundle method is used rather than a
-gradient method.
-
-\emph{Bounded subgradients.} The supergradient is
-$-\lambda-\Phi^{\!\top}Y\alpha(\lambda)$ with $\alpha(\lambda)\in D$ and
-$\|\alpha\|_\infty\le C$, so on any bounded set of multipliers the supergradients are
-bounded, and $\psi$ is Lipschitz there.
-
-\emph{No duality gap.} Problem~\eqref{eq:split} is convex, its coupling constraint is
-affine and $D$ is compact, so $\max_\lambda\psi=v(\mathrm{D})$. What the bundle method
-converges to is therefore the value we want, not a bound on it.
-
-\section{Convergence and complexity}
-With these assumptions the proximal bundle method converges to the optimum, and the
-complexity that the course material quotes for the nonsmooth convex case is
-$O(1/\varepsilon^2)$ iterations, the same order as the subgradient method, with the
-practical difference lying in the constant and in the behaviour in the tail. We
-expect the tail behaviour to matter here: the bundle accumulates cuts around the
-maximiser, and the smooth part $-\tfrac12\|\lambda\|^2$ is carried in the master
-exactly rather than approximated.
-
-The strong concavity of that term is worth isolating, because it is what the
-published analyses of cutting-plane methods for regularised risk minimisation
-\cite{Teo10,Joachims06,Franc08} exploit to obtain $O(1/\varepsilon)$ rather than
-$O(1/\varepsilon^2)$. Since Section~\ref{sec:whatitis} shows that our dual is that
-same regularised risk, we expect their rate to apply to (A1) as well.
-
-\emph{Per-iteration cost.} One oracle call is one kernel product, $O(m^2)$ in general
-and $O(mn)$ for a linear kernel, plus an $O(m\log m)$ sort. One master problem is a
-quadratic program over the unit simplex in $J$ variables, costing $O(J^2)$ in the
-solver and $O(Jm)$ to update the Gram matrix incrementally. We expect $J$ to grow
-with the number of free support vectors, for the reason given in
-Section~\ref{sec:cost}, so the dominant term should be $O(m^2)$ per iteration on
-kernel problems.
-
-For (A2) the interior-point solver on a dense convex quadratic program of order $m$
-costs $O(m^3)$ per iteration in the factorisation, in a number of iterations that is
-in practice nearly independent of $m$. This is the trade-off the experiments are
-meant to expose: (A1) pays little per iteration and may need many, (A2) pays a great
-deal per iteration and needs few.
-
-\section{A preliminary check}
-We have implemented both algorithms, and although the experimental study belongs to
-the later parts of the report, two things are worth reporting here because
-Section~3.4 of the project information asks whether we expect these properties to
-matter in practice.
-
-The first concerns the assumptions above. Strong duality holds in our runs to a
-relative error below $4\cdot10^{-9}$ for the three kernels and $C\in\{0.1,1,10\}$,
-the knapsack agrees with a general LP solver to $1.4\cdot10^{-12}$, and the
-aggregated solution and the knapsack multiplier reproduce the $\alpha^\star$ and $b$
-of a general-purpose QP solver to about $10^{-7}$. The formulation is therefore not
-merely plausible on paper.
-
-The second concerns the claim of Section~\ref{sec:bmrm}, that eliminating $b$ exactly
-should cost fewer iterations than approximating that direction with cuts. Comparing
-(A1) with a bundle method applied directly to $f(w,b)$, with $b$ as a bundle variable
-and everything else held equal, gives:
-
-\begin{table}[h]
-\centering
-\begin{tabular}{llrr}
-\toprule
-dataset & kernel & $b$ in the bundle & $b$ eliminated (ours)\\
-\midrule
-\textsc{wine}   & linear   & 137 & 29\\
-\textsc{wine}   & Gaussian & 400 (gap $6\cdot10^{-5}$) & 133 (gap $1.1\cdot10^{-8}$)\\
-\textsc{iris}   & Gaussian & 96 & 24\\
-\textsc{cancer} & linear   & 220 & 52\\
-\bottomrule
-\end{tabular}
-\caption{Iterations to a relative gap of $10^{-8}$ on a first, small set of
-instances. The Gaussian \textsc{wine} baseline had not reached tolerance at the
-400-iteration cap.}
-\end{table}
-
-A factor of four to five, and one instance where the direct method does not reach
-tolerance at all. We report this as an indication rather than a result: four
-instances is not a study, and the proper comparison, over a realistic range of sizes
-and with the parameter sensitivity, belongs to the experimental part.
-
-\emph{A caveat on the citations.} We quote these results from the sources listed, and
-before the final version we will verify each against the original and give the
-theorem and page number, as the project guidelines require.
-
-%% ------------------------------------------------------------------ chapter 7
 \chapter{What we are asking}
 \label{ch:ask}
 
@@ -874,53 +764,6 @@ If the formulation is accepted, the remaining parts of the report will cover the
 experimental set-up and the results: the comparison between (A1) and (A2), how the
 bundle grows with the number of free support vectors, which of the three One-vs-Rest
 transfer mechanisms is worth its complexity, and timings and parameter sensitivity.
-
-%% ------------------------------------------------------------------ appendix
-\appendix
-\chapter{The shared-slack-budget model}
-\label{app:budget}
-
-For completeness we record an alternative model that couples the One-vs-Rest
-problems, together with a defect we found in it. Give each sample a single slack budget $B_i$ to be shared by all $q$ binary
-classifiers:
-\begin{equation}
-\label{eq:budget}
-\tag{M-B}
-\begin{aligned}
-\min_{w,b,\xi}\quad & \sum_{k=1}^q\tfrac12\|w^k\|^2+C\sum_{i,k}\xi^k_i\\
-\text{s.t.}\quad & y^k_i\bigl(\inner{w^k}{\phi_i}+b^k\bigr)\ \ge\ 1-\xi^k_i,
-\qquad \xi^k_i\ \ge\ 0,
-\qquad \sum_{k=1}^q \xi^k_i\ \le\ B_i .
-\end{aligned}
-\end{equation}
-Dualising only the $mq$ margin constraints with $\alpha^k_i\ge0$ separates the
-variables. Minimising over $w^k$ gives the usual $w^k=\sum_i\alpha^k_iy^k_i\phi_i$
-and $-\tfrac12(\alpha^k)^{\!\top}Q^k\alpha^k$, minimising over $b^k$ forces
-$\sum_i\alpha^k_iy^k_i=0$, and minimising over $\xi$ splits across $i$ into a tiny LP
-that is solved by inspection, putting the whole budget on the most negative
-coefficient or using none of it. Hence
-\begin{equation}
-\label{eq:budgetdual}
-\psi(\alpha)=\sum_{i,k}\alpha^k_i-\tfrac12\sum_{k}(\alpha^k)^{\!\top}Q^k\alpha^k
--\sum_{i}B_i\Bigl[\max_k\bigl(\alpha^k_i-C\bigr)\Bigr]^+ ,
-\end{equation}
-on $\{\alpha\ge0:\ \sum_i\alpha^k_iy^k_i=0\ \ \forall k\}$. The budget replaces the
-box $\alpha\le C$ by a penalty, and the dual is non-differentiable where two or more
-classes tie for a contested budget, which is where the One-vs-Rest coupling happens.
-
-Writing this out showed us a defect. With a hard budget \eqref{eq:budget} can be
-infeasible, and its Lagrangian dual is then unbounded. A sample lying where two
-classifiers both score near zero needs $\xi^k_i\approx1$ from each, so $B_i<2$ is
-usually infeasible already and one outlier destroys the training problem. The repair
-is to soften the budget, $\sum_k\xi^k_i\le B_i+z_i$ with $z_i\ge0$ penalised by
-$Dz_i$: the $\xi$ subproblem stays an LP, the model is always feasible, and
-boundedness in $z$ restores the box $0\le\alpha\le(C+D)\one$.
-
-We do not propose it as the main line. Even repaired it keeps the quadratic forms
-$Q^k$ inside the dual function, so the bundle has to approximate a curved function
-with planes, whereas the relaxation of Chapter~\ref{ch:dual} leaves an LP. And it
-changes (M), so any comparison with One-vs-Rest would confound a modelling change
-with an algorithmic one.
 
 \begin{thebibliography}{99}
 
